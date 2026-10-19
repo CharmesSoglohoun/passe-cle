@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Passe-Clé · Logement étudiant à Rennes (démo)</title>
+<meta name="description" content="Prototype de démonstration : logements de passation entre étudiants à Rennes, avec visite virtuelle pièce par pièce. Annonces et coordonnées fictives.">
+<meta name="robots" content="noindex">
+<style>[hidden]:not([hidden=until-found i]){display:none!important}img{max-width:100%}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout : site à vues (accueil, recherche, fiche, visite, publier, espace, messages), conteneur 1200px, mobile d'abord avec barre d'onglets en bas */
+:root{
+  --bg:#FFFFFF; --soft:#F5F3EE; --card:#FFFFFF; --line:#E3DFD6; --ink:#17201C; --muted:#56605B;
+  --sapin:#1E4A3D; --sapin-soft:#E4EEE9; --on-sapin:#FFFFFF;
+  --corail:#C2452A; --corail-soft:#FBE7E1; --on-corail:#FFFFFF; --or:#F2B33D;
+  --ph1:#DCD5C8; --ph2:#C7D4CC; --ph3:#D9CDBF; --ph-ink:#3E4642; --ph-line:rgba(23,32,28,.18);
+  --map:#EEF0EA; --map-park:#D5E3D4; --map-water:#C9DCE6; --map-road:#E3E0D8; --lineA:#C2452A; --lineB:#2F8A6A;
+  --shadow:0 14px 36px rgba(23,32,28,.09);
+  --f-display:'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --f-body:'Figtree', 'Helvetica Neue', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1513; --soft:#161E1B; --card:#1A2320; --line:#2D3934; --ink:#ECF0ED; --muted:#A6B2AC;
+  --sapin:#8CCBB2; --sapin-soft:#1F3029; --on-sapin:#0F1513; --corail:#E46E50; --corail-soft:#3A231C; --on-corail:#160B07;
+  --ph1:#4A453E; --ph2:#3D4A44; --ph3:#4D4339; --ph-ink:#2A302D; --ph-line:rgba(255,255,255,.14);
+  --map:#1B2421; --map-park:#22352C; --map-water:#1F3340; --map-road:#26302C; --lineA:#E46E50; --lineB:#5FC59C;
+  --shadow:0 14px 36px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1513; --soft:#161E1B; --card:#1A2320; --line:#2D3934; --ink:#ECF0ED; --muted:#A6B2AC;
+  --sapin:#8CCBB2; --sapin-soft:#1F3029; --on-sapin:#0F1513; --corail:#E46E50; --corail-soft:#3A231C; --on-corail:#160B07;
+  --ph1:#4A453E; --ph2:#3D4A44; --ph3:#4D4339; --ph-ink:#2A302D; --ph-line:rgba(255,255,255,.14);
+  --map:#1B2421; --map-park:#22352C; --map-water:#1F3340; --map-road:#26302C; --lineA:#E46E50; --lineB:#5FC59C;
+  --shadow:0 14px 36px rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:16px; line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:0}
+body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top, 0px); z-index:30; background:var(--bg)}
+h1,h2,h3,.d{font-family:var(--f-display); letter-spacing:-.02em; text-wrap:balance; margin:0}
+p{margin:0}
+a{color:var(--sapin)} a:hover{color:var(--ink)}
+button,input,select,textarea{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--or); outline-offset:2px}
+.wrap{max-width:1200px; margin:0 auto}
+.muted{color:var(--muted)}
+.row{display:flex; flex-wrap:wrap; gap:12px; align-items:center}
+.stack{display:flex; flex-direction:column}
+.icon{width:20px; height:20px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+
+/* En-tête */
+.top{position:sticky; top:env(safe-area-inset-top, 0px); z-index:20; background:var(--bg); border-bottom:1px solid var(--line); margin:0 calc(-1 * max(16px, env(safe-area-inset-right, 0px))) 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px)))}
+.top .wrap{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px))}
+.brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink)}
+.brand-mark{width:36px; height:36px; border-radius:10px; background:var(--sapin); color:var(--on-sapin); display:grid; place-items:center}
+.brand-name{font-family:var(--f-display); font-weight:800; font-size:22px; letter-spacing:-.02em}
+.nav{display:flex; align-items:center; gap:4px}
+.nav a{min-height:44px; display:flex; align-items:center; padding:0 12px; border-radius:10px; text-decoration:none; color:var(--ink); font-weight:600}
+.nav a[aria-current="page"]{background:var(--sapin-soft); color:var(--sapin)}
+.nav .login{background:var(--ink); color:var(--bg); border-radius:999px; padding:0 18px; margin-left:6px}
+.nav .login:hover{color:var(--bg)}
+.tabbar{display:none}
+@media (max-width:760px){
+  .nav a:not(.login){display:none}
+  .tabbar{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); position:fixed; left:0; right:0; bottom:0; z-index:20; background:var(--bg); border-top:1px solid var(--line);
+    padding:6px max(4px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left, 0px))}
+  .tabbar a{min-height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:12px; font-weight:600; color:var(--muted); text-decoration:none}
+  .tabbar a[aria-current="page"]{color:var(--sapin); font-weight:700}
+  main{padding-bottom:84px}
+}
+
+/* Boutons, puces, badges */
+.btn{min-height:48px; padding:0 20px; border-radius:14px; border:0; font-weight:700; font-size:16px; display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none; cursor:pointer}
+.btn-lg{min-height:54px; padding:0 24px; font-size:17px}
+.btn-primary{background:var(--corail); color:var(--on-corail)} .btn-primary:hover{color:var(--on-corail); filter:brightness(1.06)}
+.btn-sapin{background:var(--sapin); color:var(--on-sapin)} .btn-sapin:hover{color:var(--on-sapin); filter:brightness(1.08)}
+.btn-outline{background:var(--bg); color:var(--ink); border:1.5px solid var(--ink)}
+.btn-quiet{background:var(--bg); color:var(--ink); border:1.5px solid var(--line)}
+.btn[disabled]{background:var(--line); color:var(--muted); cursor:not-allowed; filter:none}
+.icon-btn{width:48px; height:48px; border-radius:14px; border:1.5px solid var(--line); background:var(--bg); display:grid; place-items:center; cursor:pointer; flex:0 0 auto}
+.icon-btn[aria-pressed="true"]{color:var(--corail); border-color:var(--corail); background:var(--corail-soft)}
+.icon-btn[aria-pressed="true"] .icon{fill:currentColor}
+.chip{min-height:44px; padding:0 14px; border-radius:999px; border:1.5px solid var(--line); background:var(--bg); font-weight:600; font-size:14px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; color:var(--ink); text-decoration:none}
+.chip[aria-pressed="true"]{border-color:var(--sapin); background:var(--sapin); color:var(--on-sapin)}
+.badge{font-size:12px; font-weight:700; padding:5px 9px; border-radius:999px; display:inline-flex; align-items:center; gap:4px; line-height:1.2}
+.b-white{background:#FFFFFF; color:#1E4A3D} .b-sapin{background:#1E4A3D; color:#FFFFFF}
+.b-soft{background:var(--sapin-soft); color:var(--sapin)} .b-line{border:1px solid var(--line); color:var(--ink)}
+.b-dark{background:#17201C; color:#FFFFFF}
+
+/* Photos (emplacements) */
+.ph{position:relative; overflow:hidden; background:var(--ph1); color:var(--ph-ink)}
+.ph.t2{background:var(--ph2)} .ph.t3{background:var(--ph3)}
+.ph svg.motif{position:absolute; left:50%; top:50%; width:44%; max-width:180px; transform:translate(-50%,-56%); stroke:var(--ph-line); fill:none; stroke-width:1.5}
+.ph .ph-label{position:absolute; left:10px; bottom:10px; font-size:12px; font-weight:600; background:rgba(255,255,255,.82); color:#3E4642; padding:4px 9px; border-radius:999px}
+.ph .badges{position:absolute; top:10px; left:10px; display:flex; flex-wrap:wrap; gap:6px; right:10px}
+
+/* Champs */
+.field{display:flex; flex-direction:column; gap:6px; min-width:0}
+.field label,.label{font-weight:700; font-size:14px}
+.input{min-height:50px; padding:0 14px; border-radius:12px; border:1.5px solid var(--line); background:var(--bg); font-size:16px; width:100%}
+textarea.input{padding:12px 14px; min-height:96px; resize:vertical}
+.input:focus{border-color:var(--sapin); outline:none; box-shadow:0 0 0 3px var(--sapin-soft)}
+.hint{font-size:13px; color:var(--muted)}
+.check{min-height:44px; display:flex; align-items:center; gap:10px; cursor:pointer}
+.check input{width:22px; height:22px; accent-color:var(--sapin); flex:0 0 auto}
+
+/* Accueil */
+.hero{display:flex; flex-wrap:wrap; gap:40px; align-items:center; padding-block:48px 28px}
+.hero-text{flex:1 1 460px; min-width:0; display:flex; flex-direction:column; gap:18px}
+.eyebrow{align-self:flex-start; font-size:14px; font-weight:700; color:var(--sapin); background:var(--sapin-soft); padding:6px 12px; border-radius:999px}
+.hero h1{font-size:clamp(38px, 6vw, 66px); line-height:1.02; font-weight:800}
+.hero .lead{font-size:clamp(17px, 2vw, 20px); color:var(--muted); max-width:34em}
+.hero-photos{flex:1 1 380px; min-width:0; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px}
+.hero-photos .ph{border-radius:22px; min-height:170px}
+.hero-photos .ph:first-child{grid-row:span 2; min-height:352px}
+.searchbar{padding:14px; border-radius:22px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow); display:grid; grid-template-columns:repeat(auto-fit, minmax(min(210px,100%),1fr)); gap:12px; align-items:end}
+.section{padding-block:56px 0; display:flex; flex-direction:column; gap:18px}
+.section-head{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:10px}
+.section h2{font-size:clamp(24px, 3vw, 32px); font-weight:700}
+.campus-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px,100%),1fr)); gap:10px}
+.campus{min-height:76px; padding:14px 18px; border-radius:16px; border:1px solid var(--line); background:var(--soft); color:var(--ink); text-decoration:none; display:flex; justify-content:space-between; align-items:center; gap:10px; font-weight:700}
+.campus:hover{border-color:var(--sapin)}
+.how{padding:44px clamp(20px, 4vw, 40px); border-radius:28px; background:var(--sapin); color:var(--on-sapin)}
+.how ol{list-style:none; margin:28px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px,100%),1fr)); gap:28px}
+.how .n{font-family:var(--f-display); font-size:52px; font-weight:800; line-height:1; color:var(--or)}
+.trust{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(280px,100%),1fr)); gap:14px}
+.trust > div{padding:22px; border-radius:20px; border:1px solid var(--line); display:flex; flex-direction:column; gap:8px}
+.foot{margin-top:72px; border-top:1px solid var(--line); padding-block:28px 40px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; color:var(--muted)}
+
+/* Cartes logement */
+.grid-cards{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(270px,100%),1fr)); gap:26px 20px}
+.lcard{display:flex; flex-direction:column; gap:10px; text-decoration:none; color:var(--ink); position:relative}
+.lcard .ph{height:210px; border-radius:16px}
+.lcard .fav{position:absolute; top:160px; right:10px; width:44px; height:44px; border-radius:999px; border:0; background:var(--bg); display:grid; place-items:center; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.lcard .fav[aria-pressed="true"]{color:var(--corail)} .lcard .fav[aria-pressed="true"] .icon{fill:currentColor}
+.price{font-family:var(--f-display); font-weight:800; font-size:26px; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.lcard .trip{color:var(--sapin); font-weight:600; font-size:15px}
+.lcard.active .ph{outline:3px solid var(--corail); outline-offset:3px}
+
+/* Résultats */
+.res-head{padding-block:20px 12px; display:flex; flex-direction:column; gap:12px}
+.filters-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px}
+.filters-row > *{flex:0 0 auto}
+.panel{padding:20px; border-radius:20px; background:var(--soft); display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px,100%),1fr)); gap:18px 24px}
+.res-body{display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start; padding-bottom:40px}
+.res-list{flex:999 1 520px; min-width:0}
+.res-map{flex:1 1 380px; min-width:0; position:sticky; top:calc(env(safe-area-inset-top, 0px) + 84px)}
+.mapbox{position:relative; border-radius:20px; overflow:hidden; background:var(--map); aspect-ratio:1/1.05; max-width:100%; border:1px solid var(--line)}
+.mapbox svg{display:block; width:100%; height:100%}
+.pin{position:absolute; transform:translate(-50%,-50%); min-height:36px; padding:0 12px; border-radius:999px; border:1.5px solid var(--ink); background:var(--card); color:var(--ink); font-weight:800; font-size:14px; cursor:pointer; white-space:nowrap; font-variant-numeric:tabular-nums}
+.pin[aria-pressed="true"]{background:var(--corail); border-color:var(--corail); color:var(--on-corail); z-index:2}
+.legend{position:absolute; top:12px; left:12px; padding:8px 12px; border-radius:12px; background:var(--card); border:1px solid var(--line); font-size:13px; font-weight:600; display:flex; flex-direction:column; gap:4px}
+.legend span{display:flex; align-items:center; gap:8px}
+.legend i{display:inline-block; width:22px; height:5px; border-radius:3px}
+.viewtoggle{display:none}
+@media (max-width:900px){
+  .res-map{position:static; flex-basis:100%}
+  .viewtoggle{display:inline-flex}
+  .res-body[data-view="list"] .res-map{display:none}
+  .res-body[data-view="map"] .res-list{display:none}
+}
+.empty{padding:40px 20px; text-align:center; border-radius:20px; border:1.5px dashed var(--line); display:flex; flex-direction:column; gap:10px; align-items:center}
+
+/* Fiche */
+.back{min-height:44px; display:inline-flex; align-items:center; gap:6px; font-weight:600; margin-top:12px}
+.gallery{display:grid; grid-template-columns:2fr 1fr 1fr; grid-template-rows:200px 200px; gap:10px; margin-top:16px}
+.gallery button{border:0; padding:0; border-radius:18px; cursor:pointer; text-align:left}
+.gallery .main{grid-row:span 2}
+.gallery .start{position:absolute; left:16px; bottom:16px}
+@media (max-width:700px){
+  .gallery{grid-template-columns:repeat(4, minmax(0,1fr)); grid-template-rows:280px 76px; margin-left:calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right:calc(-1 * max(16px, env(safe-area-inset-right, 0px)))}
+  .gallery .main{grid-column:1 / -1; grid-row:auto; border-radius:0}
+  .gallery button:not(.main){border-radius:10px}
+  .gallery button:not(.main) .ph-label{display:none}
+}
+.detail{display:flex; flex-wrap:wrap; gap:40px; align-items:flex-start; padding-block:28px 48px}
+.detail-main{flex:999 1 540px; min-width:0; display:flex; flex-direction:column; gap:40px}
+.detail-side{flex:1 1 320px; min-width:0; display:flex; flex-direction:column; gap:14px; position:sticky; top:calc(env(safe-area-inset-top, 0px) + 84px)}
+@media (max-width:900px){.detail-side{position:static}}
+.facts{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(140px,100%),1fr)); gap:14px; padding:20px; border-radius:20px; background:var(--soft)}
+.facts strong{display:block; font-size:17px}
+.facts span{font-size:14px; color:var(--muted)}
+.costs{border:1px solid var(--line); border-radius:18px; overflow:hidden}
+.costs > div{display:flex; justify-content:space-between; gap:12px; padding:13px 18px; border-bottom:1px solid var(--line); font-variant-numeric:tabular-nums}
+.costs > div:last-child{border-bottom:0; background:var(--sapin-soft); font-weight:700}
+.note{display:flex; gap:12px; padding:14px 16px; border-radius:16px; background:var(--soft); line-height:1.45}
+.scam{display:flex; gap:12px; padding:14px 16px; border-radius:16px; border:1.5px dashed var(--muted); line-height:1.45}
+.equip{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(min(180px,100%),1fr)); gap:14px}
+.equip li{display:flex; align-items:center; gap:10px} .equip .icon{color:var(--sapin); width:22px; height:22px}
+.dpe{display:flex; flex-direction:column; gap:4px}
+.dpe div{display:flex; align-items:center; gap:10px}
+.dpe span{height:28px; border-radius:4px 14px 14px 4px; font-weight:800; display:flex; align-items:center; padding-left:10px}
+.dpe .on span{outline:2.5px solid var(--ink); outline-offset:2px}
+.tablebox{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:15px; font-variant-numeric:tabular-nums}
+th,td{text-align:left; padding:11px 8px 11px 0; border-top:1px solid var(--line); vertical-align:top}
+thead th{border-top:0; color:var(--muted); font-weight:600}
+.sidecard{padding:22px; border-radius:22px; border:1px solid var(--line); background:var(--card); box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px}
+.avatar{width:48px; height:48px; border-radius:999px; display:grid; place-items:center; font-family:var(--f-display); font-weight:800; font-size:18px; flex:0 0 auto}
+.av-sapin{background:var(--sapin-soft); color:var(--sapin)} .av-corail{background:var(--corail); color:var(--on-corail)}
+.masked{padding:12px 14px; border-radius:12px; background:var(--soft); display:flex; align-items:center; gap:10px}
+.coord{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 12px; border-radius:12px; background:var(--soft)}
+.coord strong{user-select:all; font-variant-numeric:tabular-nums}
+.leaver{padding:24px; border-radius:22px; background:var(--corail-soft); display:flex; flex-direction:column; gap:14px}
+.mobile-cta{display:none}
+@media (max-width:760px){
+  .mobile-cta{display:flex; position:fixed; left:0; right:0; bottom:calc(68px + env(safe-area-inset-bottom, 0px)); z-index:19; gap:10px; align-items:center; background:var(--bg); border-top:1px solid var(--line);
+    padding:10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px))}
+  .detail{padding-bottom:110px}
+}
+
+/* Visite */
+.tour{position:fixed; inset:0; z-index:50; background:#0B100E; color:#F2F4F2; display:flex; flex-direction:column;
+  padding:env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)}
+.tour-top{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px}
+.tour-top button,.tour-nav{border:0; background:rgba(255,255,255,.12); color:#FFFFFF; border-radius:999px; display:grid; place-items:center; cursor:pointer}
+.tour-top button{width:48px; height:48px}
+.tour-bars{display:grid; gap:4px; padding:0 16px 10px}
+.tour-bars i{height:4px; border-radius:2px; background:rgba(255,255,255,.22)}
+.tour-bars i.on{background:#E46E50}
+.tour-stage{position:relative; flex:1; min-height:0; margin:0 16px; border-radius:18px; touch-action:pan-y; user-select:none}
+.tour-stage .ph-label{left:50%; top:50%; bottom:auto; transform:translate(-50%,-50%); font-size:14px}
+.tour-nav{position:absolute; top:50%; width:56px; height:56px; margin-top:-28px; background:rgba(11,16,14,.72)}
+.tour-nav.prev{left:12px} .tour-nav.next{right:12px}
+.tour-info{padding:14px 16px 6px; display:flex; flex-wrap:wrap; gap:6px 16px; align-items:baseline; max-width:1200px}
+.tour-info h2{font-size:28px; font-weight:800}
+.tour-info p{flex-basis:100%; color:#D5DCD8; max-width:60ch}
+.tour-thumbs{display:flex; gap:8px; padding:6px 16px; overflow-x:auto}
+.tour-thumbs button{flex:0 0 64px; height:48px; border-radius:8px; border:2.5px solid transparent; cursor:pointer; padding:0}
+.tour-thumbs button[aria-current="true"]{border-color:#F2B33D}
+.tour-rooms{display:flex; gap:6px; padding:8px 16px; overflow-x:auto}
+.tour-rooms button{flex:0 0 auto; min-height:44px; padding:0 14px; border-radius:999px; border:0; background:rgba(255,255,255,.12); color:#F2F4F2; font-weight:600; cursor:pointer}
+.tour-rooms button[aria-current="step"]{background:#FFFFFF; color:#0B100E}
+.tour-foot{display:flex; gap:10px; padding:8px 16px 16px}
+.tour-foot .btn-primary{background:#E46E50; color:#160B07}
+
+/* Pages formulaire */
+.narrow{max-width:640px; margin:0 auto; padding-block:28px 48px; display:flex; flex-direction:column; gap:20px}
+.progress{display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:4px}
+.progress i{height:6px; border-radius:3px; background:var(--line)} .progress i.on{background:var(--sapin)}
+.room-item{padding:12px; border-radius:16px; border:1px solid var(--line); background:var(--card); display:flex; flex-direction:column; gap:10px}
+.room-item.dragging{opacity:.5}
+.room-item .head{display:flex; align-items:center; gap:8px}
+.thumbs{display:flex; flex-wrap:wrap; gap:8px}
+.thumb{width:72px; height:58px; border-radius:10px; overflow:hidden; background:var(--ph2)}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.add-photo{width:72px; height:58px; border-radius:10px; border:1.5px dashed var(--muted); display:grid; place-items:center; cursor:pointer; position:relative}
+.add-photo input{position:absolute; inset:0; opacity:0; cursor:pointer}
+.consent{padding:14px; border-radius:14px; border:2px solid var(--corail); background:var(--corail-soft); display:flex; gap:12px; align-items:flex-start; cursor:pointer}
+.consent.ok{border-color:var(--sapin)}
+.consent input{width:24px; height:24px; flex:0 0 auto; margin:0; accent-color:var(--sapin)}
+.stepfoot{display:flex; gap:10px; position:sticky; bottom:0; background:var(--bg); padding-block:12px; border-top:1px solid var(--line)}
+@media (max-width:760px){.stepfoot{bottom:calc(68px + env(safe-area-inset-bottom, 0px))}}
+.seg{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px; padding:4px; border-radius:14px; background:var(--soft)}
+.seg button{min-height:46px; border-radius:10px; border:0; background:transparent; font-weight:700; cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--bg); box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.list-item{display:flex; gap:12px; align-items:center; padding:10px; border-radius:14px; border:1px solid var(--line); text-decoration:none; color:var(--ink)}
+.list-item .ph{width:76px; height:66px; border-radius:10px; flex:0 0 auto}
+.switch{width:52px; height:32px; flex:0 0 auto; border-radius:999px; border:0; padding:3px; background:var(--muted); display:flex; justify-content:flex-start; cursor:pointer}
+.switch[aria-checked="true"]{background:var(--sapin); justify-content:flex-end}
+.switch span{width:26px; height:26px; border-radius:999px; background:#FFFFFF; box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.stats{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
+.stats div{padding:10px; border-radius:12px; background:var(--soft)}
+.stats strong{display:block; font-family:var(--f-display); font-size:22px; font-variant-numeric:tabular-nums}
+
+/* Messagerie */
+.chat{max-width:720px; margin:0 auto; padding-block:16px; display:flex; flex-direction:column; gap:12px; min-height:70vh}
+.convs{display:flex; gap:8px; overflow-x:auto}
+.bubbles{flex:1; display:flex; flex-direction:column; gap:8px; padding:8px 0}
+.bubble{max-width:78%; padding:10px 14px; border-radius:18px 18px 18px 4px; background:var(--soft); line-height:1.4}
+.bubble.me{align-self:flex-end; border-radius:18px 18px 4px 18px; background:var(--sapin); color:var(--on-sapin)}
+.composer{display:flex; gap:8px; align-items:center}
+.composer .input{border-radius:999px}
+
+.toast{position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom, 0px)); transform:translateX(-50%); z-index:60; background:var(--ink); color:var(--bg); padding:12px 18px; border-radius:999px; font-weight:600; box-shadow:var(--shadow); max-width:calc(100vw - 32px)}
+@media (prefers-reduced-motion: no-preference){
+  .view{animation:in .25s ease-out}
+  @keyframes in{from{transform:translateY(6px)} to{transform:none}}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#accueil" aria-label="Passe-Clé, accueil">
+      <span class="brand-mark"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/></svg></span>
+      <span class="brand-name">Passe-Clé</span>
+    </a>
+    <nav class="nav" aria-label="Navigation principale">
+      <a href="#recherche" data-nav="recherche">Chercher</a>
+      <a href="#publier" data-nav="publier">Libérer mon logement</a>
+      <a href="#messages" data-nav="messages">Messages</a>
+      <a href="#espace" data-nav="espace">Mon espace</a>
+      <a href="#connexion" class="login" id="loginLink">Se connecter</a>
+    </nav>
+  </div>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<nav class="tabbar" aria-label="Navigation mobile">
+  <a href="#accueil" data-nav="accueil"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5v9h-5.5v-6h-5v6H4z"/></svg>Accueil</a>
+  <a href="#recherche" data-nav="recherche"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Chercher</a>
+  <a href="#messages" data-nav="messages"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5h15v10h-9l-4.5 3.5v-3.5h-1.5z"/></svg>Messages</a>
+  <a href="#espace" data-nav="espace"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>Mon espace</a>
+</nav>
+
+<div id="tourRoot"></div>
+<div id="toastRoot" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- Icônes ---------- */
+const I = {
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+  camera:'<path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  shield:'<path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.1-7.5 9.5-4.3-1.4-7.5-4.9-7.5-9.5V6L12 3z"/><path d="M8.8 12l2.2 2.2 4.2-4.4"/>',
+  heart:'<path d="M12 20s-7.5-4.6-7.5-10A4.2 4.2 0 0 1 12 7.3 4.2 4.2 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/>',
+  msg:'<path d="M4.5 5.5h15v10h-9l-4.5 3.5v-3.5h-1.5z"/>',
+  left:'<path d="M15 5l-7 7 7 7"/>', right:'<path d="M9 5l7 7-7 7"/>', up:'<path d="M6 15l6-6 6 6"/>',
+  close:'<path d="M6 6l12 12M18 6L6 18"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+  filter:'<path d="M4 6h16M7 12h10M10 18h4"/>',
+  map:'<path d="M3.5 6.5l5.5-2 6 2 5.5-2v13l-5.5 2-6-2-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
+  list:'<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
+  info:'<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>', bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>', send:'<path d="M4 12l16-7.5-6 16-2.5-6.5z"/>',
+  grip:'<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>', key:'<circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/>',
+  bed:'<path d="M3 18V7M3 13h18v5M21 18v-3.5a3 3 0 0 0-3-3h-7v1.5"/><circle cx="7" cy="10.5" r="1.8"/>',
+  desk:'<path d="M3 8h18M5 8v11M19 8v11M5 13h6v6"/>',
+  washer:'<rect x="4.5" y="3" width="15" height="18" rx="2"/><circle cx="12" cy="13" r="4.5"/><path d="M7.5 6.5h2"/>',
+  wifi:'<path d="M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.8 16a5 5 0 0 1 6.4 0"/><circle cx="12" cy="19" r="1"/>',
+  kitchen:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><circle cx="15.5" cy="12" r="2.5"/>',
+  lift:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9.5 9.5L12 7l2.5 2.5M9.5 14.5L12 17l2.5-2.5"/>',
+  paw:'<circle cx="7" cy="10" r="1.6"/><circle cx="10.5" cy="6.5" r="1.6"/><circle cx="14.5" cy="6.5" r="1.6"/><circle cx="17.5" cy="10" r="1.6"/><path d="M12 12c-3 0-5 3.5-5 5.5 0 1.5 1.5 2 2.5 2s1.5-.6 2.5-.6 1.5.6 2.5.6 2.5-.5 2.5-2c0-2-2-5.5-5-5.5z"/>',
+  bike:'<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-7h5l3 7M10 9l2 7"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>'
+};
+const ic = (n, cls='') => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur = (n) => n.toLocaleString('fr-FR') + ' €';
+const motif = '<svg class="motif" viewBox="0 0 120 90" aria-hidden="true"><rect x="22" y="8" width="76" height="62" rx="3"/><path d="M60 8v62M22 39h76M10 82h100"/></svg>';
+const ph = (label, tone=1, extra='', badges='') => `<div class="ph t${tone} ${extra}">${motif}${badges ? `<div class="badges">${badges}</div>` : ''}<span class="ph-label">${esc(label)}</span></div>`;
+
+/* ---------- Données (annonces fictives) ---------- */
+const CAMPUS = [
+  {id:'r2', name:'Rennes 2 Villejean', x:120, y:92},
+  {id:'r1', name:'Rennes 1 Beaulieu', x:512, y:214},
+  {id:'centre', name:'Centre-ville / Rennes 1 Droit-Éco', x:318, y:300},
+  {id:'kerlann', name:'Ker Lann', x:170, y:585},
+  {id:'harpe', name:'La Harpe / Rennes 2', x:62, y:150},
+  {id:'stjacques', name:'Saint-Jacques / Rennes School of Business', x:100, y:530},
+  {id:'cesson', name:'Cesson-Sévigné', x:585, y:290}
+];
+const campusName = (id) => (CAMPUS.find(c => c.id === id) || CAMPUS[0]).name;
+const STUDIO_ROOMS = [
+  {name:'Entrée', area:'3 m²', n:2, desc:'Porte blindée, placard d’entrée avec penderie et interphone.'},
+  {name:'Pièce principale', area:'16 m²', n:4, desc:'Exposée est, lumineuse le matin. Lit 140, bureau sous la fenêtre, rangements.'},
+  {name:'Cuisine', area:'Coin cuisine', n:3, desc:'Plaques deux feux, micro-ondes, frigo avec freezer, lave-linge sous le plan.'},
+  {name:'Salle de bain', area:'3 m²', n:2, desc:'Douche, lavabo, WC séparés par une cloison. Petite fenêtre.'},
+  {name:'Vue / extérieur', area:'3e étage', n:2, desc:'Vue dégagée sur la cour arborée, sans vis-à-vis direct.'},
+  {name:'Immeuble et parties communes', area:'Ascenseur', n:2, desc:'Hall propre, local à vélos fermé, boîtes aux lettres.'}
+];
+const roomsFor = (main, area) => STUDIO_ROOMS.map((r, i) => i === 1 ? Object.assign({}, r, {name:main, area}) : r);
+const LISTINGS = [
+  {id:1, kind:'Studio', meuble:true, area:22, where:'Villejean', rent:380, charges:50, deposit:760, floor:'3e', lift:true, date:'1er juillet', apl:true, pets:false, metro:true, verified:true, dpe:'D', tone:1, x:140, y:140,
+   equip:['bed','desk','washer','wifi','kitchen','lift'], leaver:{name:'Léa', school:'Université Rennes 2', leave:'30 juin', liked:'Très lumineux le matin, la fac à 5 minutes et le métro juste à côté. Immeuble calme.', know:'Chauffage électrique : la facture monte un peu en hiver. La douche est petite.'},
+   landlord:{type:'Particulier', name:'M. Exemple', tel:'06 00 00 00 00', mail:'bailleur@exemple.fr', cond:['Garant demandé, ou garantie Visale acceptée','Dossier : pièce d’identité, certificat de scolarité, justificatifs du garant']},
+   trips:{r2:[5,'à pied'], harpe:[9,'à pied'], centre:[10,'en métro A'], r1:[28,'en métro A + B'], stjacques:[30,'en bus'], cesson:[38,'en métro + bus'], kerlann:[45,'en métro + bus']},
+   near:[['Métro A · Villejean-Université','4 min à pied'],['Arrêt de bus','2 min à pied'],['Supermarché','4 min à pied'],['Boulangerie','3 min à pied']], rooms:roomsFor('Pièce principale','16 m²')},
+  {id:2, kind:'T1', meuble:false, area:30, where:'Beaulieu', rent:470, charges:50, deposit:470, floor:'2e', lift:false, date:'15 juillet', apl:true, pets:true, metro:true, verified:true, dpe:'C', tone:2, x:488, y:250,
+   equip:['wifi','kitchen','washer','paw'], leaver:{name:'Yanis', school:'Université de Rennes', leave:'14 juillet', liked:'Grand séjour, cuisine séparée, campus de Beaulieu à vélo en 8 minutes.', know:'Pas d’ascenseur. Logement non meublé : il faut prévoir lit et bureau.'},
+   landlord:{type:'Agence', name:'Agence Exemple', tel:'02 00 00 00 00', mail:'agence@exemple.fr', cond:['Garantie Visale acceptée','Dossier complet demandé avant visite']},
+   trips:{r1:[8,'à vélo'], cesson:[12,'à vélo'], centre:[16,'en métro B'], r2:[30,'en métro B + A'], harpe:[34,'en métro + bus'], stjacques:[26,'en métro B'], kerlann:[48,'en métro + bus']},
+   near:[['Métro B · Beaulieu-Université','6 min à pied'],['Supermarché','5 min à pied'],['Piste cyclable','sur la rue']], rooms:roomsFor('Séjour','22 m²')},
+  {id:3, kind:'Colocation', meuble:true, area:12, where:'Centre / Sainte-Anne', rent:340, charges:50, deposit:340, floor:'4e', lift:true, date:'1er août', apl:true, pets:false, metro:true, verified:false, dpe:'E', tone:3, x:292, y:244,
+   equip:['bed','desk','wifi','kitchen','washer','lift'], note:'Chambre dans un T4 partagé à trois.', leaver:{name:'Maëlle', school:'Sciences Po Rennes', leave:'31 juillet', liked:'Colocs sympas, en plein centre, métro ligne A à 2 minutes.', know:'Le salon est partagé, la salle de bain aussi (à trois). Rue animée le week-end.'},
+   landlord:{type:'Particulier', name:'Mme Exemple', tel:'06 00 00 00 01', mail:'coloc@exemple.fr', cond:['Garant demandé','Bail individuel']},
+   trips:{centre:[6,'à pied'], r2:[12,'en métro A'], harpe:[18,'en bus'], r1:[18,'en métro B'], stjacques:[20,'en métro B'], cesson:[30,'en métro + bus'], kerlann:[40,'en métro + bus']},
+   near:[['Métro A et B · Sainte-Anne','2 min à pied'],['Marché des Lices','5 min à pied'],['Supérette','1 min à pied']], rooms:roomsFor('Chambre','12 m²')},
+  {id:4, kind:'Résidence étudiante', meuble:true, area:18, where:'La Harpe', rent:405, charges:50, deposit:405, floor:'1er', lift:true, date:'1er septembre', apl:true, pets:false, metro:false, verified:true, dpe:'B', tone:3, x:84, y:178,
+   equip:['bed','desk','wifi','kitchen','lift'], leaver:{name:'Tom', school:'Université Rennes 2', leave:'31 août', liked:'Résidence récente, laverie et salle d’étude au rez-de-chaussée.', know:'Peu de rangements. Les visites passent par l’accueil de la résidence.'},
+   landlord:{type:'Résidence', name:'Résidence Exemple', tel:'02 00 00 00 02', mail:'residence@exemple.fr', cond:['Garantie Visale acceptée','Certificat de scolarité obligatoire']},
+   trips:{harpe:[3,'à pied'], r2:[9,'à pied'], centre:[22,'en bus'], r1:[38,'en bus + métro'], stjacques:[32,'en bus'], cesson:[45,'en bus + métro'], kerlann:[50,'en bus']},
+   near:[['Arrêt de bus','3 min à pied'],['Supermarché','7 min à pied']], rooms:roomsFor('Chambre','18 m²')},
+  {id:5, kind:'Studio', meuble:true, area:19, where:'Thabor', rent:420, charges:50, deposit:840, floor:'RDC', lift:false, date:'10 juillet', apl:true, pets:true, metro:true, verified:true, dpe:'D', tone:1, x:362, y:282,
+   equip:['bed','desk','wifi','kitchen','paw'], leaver:{name:'Inès', school:'Rennes School of Business', leave:'9 juillet', liked:'Quartier calme à côté du parc du Thabor, tout se fait à pied.', know:'Rez-de-chaussée sur cour : il fait un peu sombre l’hiver.'},
+   landlord:{type:'Particulier', name:'M. Exemple', tel:'06 00 00 00 02', mail:'thabor@exemple.fr', cond:['Garant demandé']},
+   trips:{centre:[8,'à pied'], r1:[14,'à vélo'], r2:[18,'en métro A'], stjacques:[22,'en métro'], harpe:[26,'en bus'], cesson:[25,'en bus'], kerlann:[42,'en métro + bus']},
+   near:[['Parc du Thabor','2 min à pied'],['Métro · Gares','12 min à pied'],['Boulangerie','2 min à pied']], rooms:roomsFor('Pièce principale','14 m²')},
+  {id:6, kind:'Chambre chez l’habitant', meuble:true, area:14, where:'Cesson-Sévigné', rent:320, charges:30, deposit:320, floor:'1er', lift:false, date:'1er septembre', apl:false, pets:false, metro:false, verified:true, dpe:'C', tone:2, x:566, y:318,
+   equip:['bed','desk','wifi','washer'], leaver:{name:'Hugo', school:'Université de Rennes', leave:'31 août', liked:'Maison au calme avec jardin, propriétaires très arrangeants.', know:'Le dernier bus passe tôt le soir. Accès cuisine sur créneaux.'},
+   landlord:{type:'Particulier', name:'Mme Exemple', tel:'06 00 00 00 03', mail:'habitant@exemple.fr', cond:['Pas de garant demandé','Rencontre avant engagement']},
+   trips:{cesson:[6,'à pied'], r1:[14,'en bus'], centre:[28,'en bus'], r2:[45,'en bus + métro'], harpe:[50,'en bus + métro'], stjacques:[40,'en bus + métro'], kerlann:[45,'en bus']},
+   near:[['Arrêt de bus','5 min à pied'],['Boulangerie','6 min à pied']], rooms:roomsFor('Chambre','14 m²')}
+];
+const EQUIP = {bed:'Lit', desk:'Bureau', washer:'Lave-linge', wifi:'Fibre', kitchen:'Cuisine équipée', lift:'Ascenseur', paw:'Animaux acceptés'};
+const DPE = [['A','#1F7A4D','#FFFFFF',34],['B','#3E9A55','#FFFFFF',44],['C','#9CC24A','#17201C',54],['D','#F2D23D','#17201C',64],['E','#F2A93D','#17201C',74],['F','#E8743A','#17201C',84],['G','#C7352B','#FFFFFF',94]];
+const TYPES = ['Studio','T1','T2','Colocation','Chambre chez l’habitant','Résidence étudiante'];
+const total = (l) => l.rent + l.charges;
+const title = (l) => `${l.kind}${l.meuble && l.kind !== 'Résidence étudiante' && l.kind !== 'Chambre chez l’habitant' ? ' meublé' : ''} · ${l.area} m²`;
+
+/* ---------- État ---------- */
+const S = {
+  q:{campus:'r2', budget:500, date:'1er juillet'},
+  f:{types:[], meuble:false, apl:false, metro:false, pets:false, maxTrip:0, minArea:0},
+  sort:'campus', view:'list', panel:false, selected:null,
+  saved:new Set([1]), verified:false, codeSent:false, user:null,
+  alerts:[{title:'Studio ≤ 450 € près de Rennes 2', sub:'Meublé · dès le 1er juillet', on:true},{title:'T1 ≤ 550 € à Beaulieu', sub:'Fibre · proche métro', on:false}],
+  convs:{1:[{me:false, text:'Bonjour ! Je suis Léa, je pars le 30 juin. N’hésitez pas si vous avez des questions sur le studio.'}]},
+  convWith:1, espaceTab:'seek', mine:[], given:{},
+  pub:{step:1, type:'Studio', consent:false, rooms:[['Entrée',[]],['Pièce principale',[]],['Cuisine',[]],['Salle de bain',[]],['Vue / extérieur',[]],['Immeuble et parties communes',[]]]}
+};
+
+/* ---------- Utilitaires ---------- */
+const app = document.getElementById('app');
+function toast(msg){
+  const r = document.getElementById('toastRoot');
+  r.innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { r.innerHTML = ''; }, 2600);
+}
+function setNav(route){
+  document.querySelectorAll('[data-nav]').forEach(a => {
+    if (a.dataset.nav === route) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+  });
+  const ll = document.getElementById('loginLink');
+  ll.textContent = S.user ? S.user : 'Se connecter';
+  ll.href = S.user ? '#espace' : '#connexion';
+}
+function card(l){
+  const t = l.trips[S.q.campus];
+  const badges = `<span class="badge b-white">${ic('camera')}Visite virtuelle</span>${l.verified ? '<span class="badge b-sapin">Annonce vérifiée</span>' : ''}`;
+  return `<div class="lcard${S.selected === l.id ? ' active' : ''}" data-card="${l.id}">
+    <a href="#logement-${l.id}" style="display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit">
+      ${ph(l.rooms[1].name, l.tone, '', badges)}
+      <div class="stack" style="gap:2px">
+        <div class="row" style="gap:6px;align-items:baseline"><span class="price">${eur(total(l))}</span><span class="muted">CC / mois</span></div>
+        <strong>${esc(title(l))} · ${esc(l.where)}</strong>
+        <span class="trip">${t ? `${t[0]} min ${esc(t[1])} de ${esc(campusName(S.q.campus))}` : ''}</span>
+        <span class="muted" style="font-size:15px">Disponible le ${esc(l.date)}</span>
+      </div>
+    </a>
+    <button class="fav" type="button" data-fav="${l.id}" aria-pressed="${S.saved.has(l.id)}" aria-label="Enregistrer ce logement">${ic('heart')}</button>
+  </div>`;
+}
+function bindFavs(root){
+  root.querySelectorAll('[data-fav]').forEach(b => b.addEventListener('click', (e) => {
+    e.preventDefault();
+    const id = +b.dataset.fav;
+    if (S.saved.has(id)) { S.saved.delete(id); toast('Retiré de vos logements enregistrés'); }
+    else { S.saved.add(id); toast('Logement enregistré'); }
+    b.setAttribute('aria-pressed', S.saved.has(id));
+  }));
+}
+function campusOptions(sel){ return CAMPUS.map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(c.name)}</option>`).join(''); }
+
+/* ---------- Accueil ---------- */
+function viewHome(){
+  const recent = LISTINGS.slice(0, 3);
+  app.innerHTML = `<div class="view wrap">
+    <section class="hero">
+      <div class="hero-text">
+        <span class="eyebrow">Logements de passation entre étudiants · Rennes</span>
+        <h1>Le logement de ceux qui partent, pour ceux qui arrivent.</h1>
+        <p class="lead">Visitez chaque logement pièce par pièce depuis chez vous, connaissez le coût réel et contactez le bailleur en confiance.</p>
+        <div class="row">
+          <a class="btn btn-sapin btn-lg" href="#recherche">Je cherche un logement</a>
+          <a class="btn btn-lg" style="background:var(--corail-soft);color:var(--ink);border:1.5px solid var(--corail)" href="#publier">Je libère mon logement</a>
+        </div>
+      </div>
+      <div class="hero-photos" aria-hidden="true">${ph('Photo · Pièce principale',1)}${ph('Cuisine',2)}${ph('Vue / extérieur',3)}</div>
+    </section>
+    <form class="searchbar" id="homeSearch">
+      <div class="field"><label for="h-campus">Campus ou quartier</label><select class="input" id="h-campus">${campusOptions(S.q.campus)}</select></div>
+      <div class="field"><label for="h-budget">Budget max, charges comprises</label><input class="input" id="h-budget" type="number" min="200" max="1500" step="10" value="${S.q.budget}" inputmode="numeric"></div>
+      <div class="field"><label for="h-date">Date d’entrée souhaitée</label><input class="input" id="h-date" type="text" value="${esc(S.q.date)}"></div>
+      <button class="btn btn-primary btn-lg" type="submit">${ic('search')}Rechercher</button>
+    </form>
+    <section class="section">
+      <h2>Chercher près de mon campus</h2>
+      <div class="campus-grid">${CAMPUS.map(c => `<a class="campus" href="#recherche" data-campus="${c.id}"><span>${esc(c.name)}</span>${ic('right')}</a>`).join('')}</div>
+    </section>
+    <section class="section">
+      <div class="section-head"><h2>Récemment libérés</h2><a href="#recherche" style="font-weight:700">Voir tous les logements</a></div>
+      <div class="grid-cards">${recent.map(card).join('')}</div>
+    </section>
+    <section class="section">
+      <div class="how">
+        <h2 style="font-size:clamp(26px,3.4vw,36px)">Comment ça marche</h2>
+        <ol>
+          <li class="stack" style="gap:8px"><span class="n">1</span><strong style="font-size:19px">Celui qui part publie</strong><span style="opacity:.9">En moins de 10 minutes depuis son téléphone : photos pièce par pièce, coût, contact du bailleur.</span></li>
+          <li class="stack" style="gap:8px"><span class="n">2</span><strong style="font-size:19px">Celui qui arrive visite à distance</strong><span style="opacity:.9">Il filtre par budget et par campus, puis parcourt le logement comme s’il y était.</span></li>
+          <li class="stack" style="gap:8px"><span class="n">3</span><strong style="font-size:19px">Le bailleur trouve son successeur</strong><span style="opacity:.9">Contact direct avec un profil étudiant vérifié, sans repasser une annonce.</span></li>
+        </ol>
+      </div>
+    </section>
+    <section class="section">
+      <h2>Louer sans se faire avoir</h2>
+      <div class="trust">
+        <div><span style="color:var(--sapin)">${ic('shield')}</span><strong style="font-size:18px">Annonces vérifiées</strong><span class="muted">Le bailleur a accepté d’être contacté et l’adresse est contrôlée avant la mise en ligne.</span></div>
+        <div><span style="color:var(--sapin)">${ic('user')}</span><strong style="font-size:18px">Profils étudiants vérifiés</strong><span class="muted">E-mail universitaire ou certificat de scolarité pour publier et voir les coordonnées.</span></div>
+        <div><span style="color:var(--corail)">${ic('info')}</span><strong style="font-size:18px">Conseils anti-arnaque</strong><span class="muted">Ne versez jamais d’argent avant d’avoir visité ou signé un bail. Méfiez-vous d’un bailleur « à l’étranger » qui demande un virement pour réserver.</span></div>
+      </div>
+    </section>
+    <footer class="foot"><div class="stack"><span class="brand-name" style="color:var(--ink)">Passe-Clé</span><span>Une plateforme entre étudiants, à Rennes. Site de démonstration : annonces et coordonnées fictives.</span></div></footer>
+  </div>`;
+  document.getElementById('homeSearch').addEventListener('submit', (e) => {
+    e.preventDefault();
+    S.q.campus = document.getElementById('h-campus').value;
+    S.q.budget = +document.getElementById('h-budget').value || 500;
+    S.q.date = document.getElementById('h-date').value;
+    location.hash = 'recherche';
+  });
+  app.querySelectorAll('[data-campus]').forEach(a => a.addEventListener('click', () => { S.q.campus = a.dataset.campus; }));
+  bindFavs(app);
+}
+
+/* ---------- Recherche ---------- */
+function filtered(){
+  let r = LISTINGS.filter(l => total(l) <= S.q.budget
+    && (!S.f.types.length || S.f.types.includes(l.kind))
+    && (!S.f.meuble || l.meuble) && (!S.f.apl || l.apl) && (!S.f.metro || l.metro) && (!S.f.pets || l.pets)
+    && (!S.f.maxTrip || (l.trips[S.q.campus] && l.trips[S.q.campus][0] <= S.f.maxTrip))
+    && (!S.f.minArea || l.area >= S.f.minArea));
+  if (S.sort === 'campus') r.sort((a,b) => a.trips[S.q.campus][0] - b.trips[S.q.campus][0]);
+  if (S.sort === 'prix') r.sort((a,b) => total(a) - total(b));
+  if (S.sort === 'recent') r.sort((a,b) => b.id - a.id);
+  return r;
+}
+function mapSVG(){
+  const c = CAMPUS.find(x => x.id === S.q.campus);
+  return `<svg viewBox="0 0 620 650" role="img" aria-label="Plan schématique de Rennes avec les lignes de métro A et B, les logements et le campus choisi" preserveAspectRatio="xMidYMid slice">
+    <rect width="620" height="650" fill="var(--map)"/>
+    <path d="M0 330 C120 350 210 300 300 320 S470 400 620 380" fill="none" stroke="var(--map-water)" stroke-width="18"/>
+    <path d="M0 230 H620 M0 450 H620 M200 0 V650 M420 0 V650" stroke="var(--map-road)" stroke-width="8"/>
+    <rect x="345" y="235" width="60" height="44" rx="14" fill="var(--map-park)"/>
+    <rect x="40" y="420" width="110" height="70" rx="20" fill="var(--map-park)"/>
+    <path d="M120 110 L220 200 L300 262 L314 305 L332 362 L455 520" fill="none" stroke="var(--lineA)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M110 520 L230 420 L332 362 L352 312 L300 262 L382 200 L452 172 L505 228 L566 200" fill="none" stroke="var(--lineB)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    ${[[120,110,'var(--lineA)'],[300,262,'var(--ink)'],[332,362,'var(--ink)'],[455,520,'var(--lineA)'],[110,520,'var(--lineB)'],[505,228,'var(--lineB)'],[566,200,'var(--lineB)']].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="7" fill="var(--bg)" stroke="${p[2]}" stroke-width="3"/>`).join('')}
+    <g font-family="Figtree, sans-serif" font-size="14" font-weight="700" fill="var(--ink)">
+      <text x="134" y="122">Villejean-Université</text><text x="196" y="270">Sainte-Anne</text><text x="344" y="372">Gares</text>
+      <text x="380" y="252" fill="var(--muted)">Thabor</text><text x="466" y="530">La Poterie</text><text x="124" y="540">Saint-Jacques–Gaîté</text><text x="420" y="160">Beaulieu-Université</text>
+    </g>
+    ${c ? `<g><circle cx="${c.x}" cy="${c.y}" r="14" fill="var(--sapin)"/><path d="M${c.x-6} ${c.y+1}l6-6 6 6M${c.x-4} ${c.y-1}v6h8v-6" stroke="var(--on-sapin)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>` : ''}
+  </svg>`;
+}
+function viewSearch(){
+  const res = filtered();
+  const activeCount = S.f.types.length + ['meuble','apl','metro','pets'].filter(k => S.f[k]).length + (S.f.maxTrip ? 1 : 0) + (S.f.minArea ? 1 : 0);
+  const quick = [['meuble','Meublé'],['apl','Éligible APL'],['metro','Proche métro'],['pets','Animaux acceptés']];
+  app.innerHTML = `<div class="view wrap">
+    <div class="res-head">
+      <form class="searchbar" id="sForm" style="box-shadow:none">
+        <div class="field"><label for="s-campus">Près de</label><select class="input" id="s-campus">${campusOptions(S.q.campus)}</select></div>
+        <div class="field"><label for="s-budget">Budget max CC : <span id="bv">${eur(S.q.budget)}</span></label><input id="s-budget" type="range" min="300" max="700" step="10" value="${S.q.budget}" style="accent-color:var(--sapin);min-height:50px;width:100%"></div>
+        <div class="field"><label for="s-sort">Trier par</label><select class="input" id="s-sort">
+          <option value="campus"${S.sort==='campus'?' selected':''}>Plus proche de mon campus</option>
+          <option value="recent"${S.sort==='recent'?' selected':''}>Plus récent</option>
+          <option value="prix"${S.sort==='prix'?' selected':''}>Prix croissant</option></select></div>
+      </form>
+      <div class="filters-row" role="group" aria-label="Filtres rapides">
+        <button type="button" class="chip" id="openPanel" aria-expanded="${S.panel}" style="border-color:var(--ink)">${ic('filter')}Filtres${activeCount ? ' · ' + activeCount : ''}</button>
+        ${quick.map(q => `<button type="button" class="chip" data-quick="${q[0]}" aria-pressed="${S.f[q[0]]}">${q[1]}</button>`).join('')}
+        <button type="button" class="chip viewtoggle" id="viewToggle">${S.view === 'list' ? ic('map') + 'Carte' : ic('list') + 'Liste'}</button>
+      </div>
+      ${S.panel ? `<div class="panel" id="panel">
+        <fieldset style="border:0;margin:0;padding:0;grid-column:1/-1"><legend class="label" style="margin-bottom:8px">Type de logement</legend>
+          <div class="row" style="gap:8px">${TYPES.map(t => `<button type="button" class="chip" data-type="${esc(t)}" aria-pressed="${S.f.types.includes(t)}">${esc(t)}</button>`).join('')}</div></fieldset>
+        <div class="field"><label for="f-trip">Temps de trajet vers le campus</label><select class="input" id="f-trip">
+          ${[[0,'Peu importe'],[10,'10 min maximum'],[20,'20 min maximum'],[30,'30 min maximum']].map(o => `<option value="${o[0]}"${S.f.maxTrip===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+        <div class="field"><label for="f-area">Surface minimum</label><select class="input" id="f-area">
+          ${[[0,'Peu importe'],[15,'15 m² et plus'],[20,'20 m² et plus'],[25,'25 m² et plus']].map(o => `<option value="${o[0]}"${S.f.minArea===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div>
+        <div class="field"><label for="f-date">Disponible dès</label><input class="input" id="f-date" type="text" value="${esc(S.q.date)}"></div>
+        <div class="row" style="grid-column:1/-1;justify-content:space-between">
+          <button type="button" class="btn btn-quiet" id="resetF">Tout effacer</button>
+          <button type="button" class="btn btn-primary" id="closePanel">Voir ${res.length} logement${res.length > 1 ? 's' : ''}</button>
+        </div>
+      </div>` : ''}
+      <h1 style="font-size:clamp(22px,3vw,28px);font-weight:800">${res.length} logement${res.length > 1 ? 's' : ''} près de ${esc(campusName(S.q.campus))}</h1>
+    </div>
+    <div class="res-body" data-view="${S.view}">
+      <div class="res-list">
+        ${res.length ? `<div class="grid-cards">${res.map(card).join('')}</div>` : `<div class="empty"><strong>Aucun logement ne correspond</strong><span class="muted">Augmentez le budget ou retirez un filtre.</span><button type="button" class="btn btn-quiet" id="resetF2">Effacer les filtres</button></div>`}
+        <div class="note" style="margin-top:28px;align-items:center;flex-wrap:wrap;justify-content:space-between;background:var(--sapin-soft)">
+          <span class="row" style="gap:12px;flex-wrap:nowrap"><span style="color:var(--sapin)">${ic('bell')}</span><span><strong>Pas encore le bon ?</strong><br><span class="muted">Recevez les nouvelles annonces qui correspondent à cette recherche.</span></span></span>
+          <button type="button" class="btn btn-sapin" id="mkAlert">Créer une alerte</button>
+        </div>
+      </div>
+      <aside class="res-map" aria-label="Carte">
+        <div class="mapbox" id="mapbox">
+          ${mapSVG()}
+          <div class="legend"><span><i style="background:var(--lineA)"></i>Métro ligne A</span><span><i style="background:var(--lineB)"></i>Métro ligne B</span><span><i style="background:var(--sapin);width:12px;height:12px;border-radius:99px"></i>Votre campus</span></div>
+          ${res.map(l => `<button type="button" class="pin" data-pin="${l.id}" aria-pressed="${S.selected === l.id}" style="left:${l.x/620*100}%;top:${l.y/650*100}%" aria-label="${esc(title(l))}, ${eur(total(l))} charges comprises">${eur(total(l))}</button>`).join('')}
+        </div>
+        <p class="hint" style="margin-top:8px">Plan schématique. Temps de trajet estimés, à titre indicatif.</p>
+        <div id="mapPick"></div>
+      </aside>
+    </div>
+  </div>`;
+  const rerender = () => { const y = scrollY; viewSearch(); scrollTo(0, y); };
+  document.getElementById('sForm').addEventListener('submit', e => e.preventDefault());
+  document.getElementById('s-campus').addEventListener('change', e => { S.q.campus = e.target.value; rerender(); });
+  const br = document.getElementById('s-budget');
+  br.addEventListener('input', e => { document.getElementById('bv').textContent = eur(+e.target.value); });
+  br.addEventListener('change', e => { S.q.budget = +e.target.value; rerender(); });
+  document.getElementById('s-sort').addEventListener('change', e => { S.sort = e.target.value; rerender(); });
+  document.getElementById('openPanel').addEventListener('click', () => { S.panel = !S.panel; rerender(); });
+  document.getElementById('viewToggle').addEventListener('click', () => { S.view = S.view === 'list' ? 'map' : 'list'; rerender(); });
+  app.querySelectorAll('[data-quick]').forEach(b => b.addEventListener('click', () => { const k = b.dataset.quick; S.f[k] = !S.f[k]; rerender(); }));
+  app.querySelectorAll('[data-type]').forEach(b => b.addEventListener('click', () => {
+    const t = b.dataset.type; S.f.types = S.f.types.includes(t) ? S.f.types.filter(x => x !== t) : S.f.types.concat([t]); rerender(); }));
+  const ft = document.getElementById('f-trip'); if (ft) ft.addEventListener('change', e => { S.f.maxTrip = +e.target.value; rerender(); });
+  const fa = document.getElementById('f-area'); if (fa) fa.addEventListener('change', e => { S.f.minArea = +e.target.value; rerender(); });
+  const cp = document.getElementById('closePanel'); if (cp) cp.addEventListener('click', () => { S.panel = false; rerender(); });
+  const reset = () => { S.f = {types:[], meuble:false, apl:false, metro:false, pets:false, maxTrip:0, minArea:0}; rerender(); };
+  ['resetF','resetF2'].forEach(id => { const b = document.getElementById(id); if (b) b.addEventListener('click', reset); });
+  document.getElementById('mkAlert').addEventListener('click', () => {
+    S.alerts.push({title:`≤ ${eur(S.q.budget)} près de ${campusName(S.q.campus)}`, sub:S.f.types.length ? S.f.types.join(', ') : 'Tous types', on:true});
+    toast('Alerte créée. Retrouvez-la dans Mon espace.');
+  });
+  app.querySelectorAll('[data-pin]').forEach(b => b.addEventListener('click', () => {
+    S.selected = +b.dataset.pin;
+    app.querySelectorAll('[data-pin]').forEach(p => p.setAttribute('aria-pressed', +p.dataset.pin === S.selected));
+    app.querySelectorAll('[data-card]').forEach(c => c.classList.toggle('active', +c.dataset.card === S.selected));
+    const l = LISTINGS.find(x => x.id === S.selected);
+    document.getElementById('mapPick').innerHTML = `<a class="list-item" href="#logement-${l.id}" style="margin-top:10px">${ph('',l.tone)}<span class="stack"><span class="price" style="font-size:21px">${eur(total(l))} <span class="muted" style="font-size:13px;font-family:var(--f-body);font-weight:500">CC</span></span><strong>${esc(title(l))}</strong><span class="trip" style="color:var(--sapin);font-weight:600;font-size:14px">${l.trips[S.q.campus][0]} min ${esc(l.trips[S.q.campus][1])}</span></span></a>`;
+    const cardEl = app.querySelector(`[data-card="${S.selected}"]`);
+    if (cardEl && innerWidth > 900) cardEl.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }));
+  bindFavs(app);
+}
+
+/* ---------- Fiche logement ---------- */
+function viewListing(id){
+  const l = LISTINGS.find(x => x.id === id) || S.mine.find(x => x.id === id);
+  if (!l) { location.hash = 'recherche'; return; }
+  const t = l.trips[S.q.campus];
+  const est = 25 + (l.kind === 'Colocation' ? 0 : 25);
+  const tiles = [0,2,3,4];
+  app.innerHTML = `<div class="view wrap">
+    <a class="back" href="#recherche">${ic('left')}Retour aux résultats</a>
+    <div class="gallery">
+      <button type="button" class="main ph t${l.tone}" data-tour="1" aria-label="Démarrer la visite virtuelle">${motif}<div class="badges"><span class="badge b-white">${ic('camera')}Visite virtuelle · ${l.rooms.length} pièces</span></div><span class="ph-label" style="left:auto;right:10px">Photo · ${esc(l.rooms[1].name)}</span><span class="btn btn-primary btn-lg start">${ic('camera')}Démarrer la visite</span></button>
+      ${tiles.map((r,i) => `<button type="button" class="ph t${(l.tone + i) % 3 + 1}" data-tour="${r}" aria-label="Voir ${esc(l.rooms[r].name)}">${motif}<span class="ph-label">${esc(l.rooms[r].name)}</span></button>`).join('')}
+    </div>
+    <div class="detail">
+      <div class="detail-main">
+        <section class="stack" style="gap:10px">
+          <div class="row" style="gap:6px">${l.verified ? `<span class="badge b-sapin">${ic('check')}Annonce vérifiée</span>` : '<span class="badge b-line">Vérification en cours</span>'}<span class="badge b-soft">Visite virtuelle</span>${l.apl ? '<span class="badge b-line">Éligible APL</span>' : ''}</div>
+          <h1 style="font-size:clamp(28px,4vw,44px);line-height:1.05;font-weight:800">${esc(title(l))} · ${esc(l.where)}</h1>
+          <p class="muted" style="font-size:17px">Rue fictive, Rennes${t ? ` · ${t[0]} min ${esc(t[1])} de ${esc(campusName(S.q.campus))}` : ''}</p>
+          ${l.note ? `<p>${esc(l.note)}</p>` : ''}
+        </section>
+        <section class="facts" aria-label="Résumé">
+          ${[['Loyer',eur(l.rent)],['Charges',eur(l.charges)],['Total mensuel',eur(total(l))],['Dépôt de garantie',eur(l.deposit)],['Type',l.kind],['Surface',l.area+' m²'],['Étage',l.floor + (l.lift ? ', ascenseur' : ', sans ascenseur')],['Meublé',l.meuble ? 'Oui' : 'Non'],['Disponible',l.date]].map(f => `<div><span>${f[0]}</span><strong>${esc(f[1])}</strong></div>`).join('')}
+        </section>
+        <section class="stack" style="gap:14px">
+          <h2 style="font-size:28px;font-weight:700">Coût réel estimé</h2>
+          <div class="row" style="align-items:stretch;gap:16px">
+            <div class="costs" style="flex:2 1 320px">
+              <div><span>Loyer + charges</span><strong>${eur(total(l))}</strong></div>
+              <div><span>Électricité <span class="muted">(estimation)</span></span><strong>≈ 25 €</strong></div>
+              ${l.kind === 'Colocation' ? '<div><span>Internet <span class="muted">(inclus dans les charges)</span></span><strong>0 €</strong></div>' : '<div><span>Internet <span class="muted">(estimation)</span></span><strong>≈ 25 €</strong></div>'}
+              <div><span>Budget mensuel estimé</span><strong class="d" style="font-size:20px">≈ ${eur(total(l) + est)}</strong></div>
+            </div>
+            <div class="note" style="flex:1 1 240px;flex-direction:column;gap:6px">
+              <strong>Aides au logement</strong>
+              <span>${l.apl ? 'Ce logement est éligible aux APL. Le montant dépend de vos ressources et de votre situation.' : 'Le bailleur indique que ce logement n’ouvre pas droit aux APL.'}</span>
+              <a href="https://www.caf.fr" style="font-weight:700">Simuler mes APL sur le site de la CAF</a>
+              <span class="hint">Prévoir aussi le dépôt de garantie : ${eur(l.deposit)}.</span>
+            </div>
+          </div>
+        </section>
+        <section class="stack" style="gap:14px">
+          <h2 style="font-size:28px;font-weight:700">Localisation et trajets</h2>
+          <div class="tablebox"><table>
+            <caption class="sr">Temps de trajet estimés vers les campus</caption>
+            <thead><tr><th scope="col">Campus</th><th scope="col">Trajet estimé</th></tr></thead>
+            <tbody>${CAMPUS.map(c => `<tr${c.id === S.q.campus ? ' style="font-weight:700"' : ''}><th scope="row" style="font-weight:inherit">${esc(c.name)}</th><td>${l.trips[c.id][0]} min ${esc(l.trips[c.id][1])}</td></tr>`).join('')}</tbody>
+          </table></div>
+          <ul class="row" style="list-style:none;margin:0;padding:0;gap:8px">${l.near.map(n => `<li class="badge b-line" style="font-size:14px;padding:8px 12px">${esc(n[0])} · ${esc(n[1])}</li>`).join('')}</ul>
+          <p class="hint">Temps estimés, à titre indicatif.</p>
+        </section>
+        <section class="row" style="align-items:flex-start;gap:40px">
+          <div class="stack" style="flex:1 1 280px;gap:14px"><h2 style="font-size:28px;font-weight:700">Équipements</h2>
+            <ul class="equip">${l.equip.map(e => `<li>${ic(e)}${EQUIP[e]}</li>`).join('')}</ul></div>
+          <div class="stack" style="flex:1 1 260px;gap:14px"><h2 style="font-size:28px;font-weight:700">Diagnostic énergétique (DPE)</h2>
+            <div class="dpe" role="img" aria-label="Classe énergie ${l.dpe}, sur une échelle de A à G">${DPE.map(d => `<div class="${d[0] === l.dpe ? 'on' : ''}"><span style="width:${d[3]}%;background:${d[1]};color:${d[2]}">${d[0]}</span>${d[0] === l.dpe ? '<strong>Ce logement</strong>' : ''}</div>`).join('')}</div></div>
+        </section>
+        <section class="leaver">
+          <div class="row" style="gap:14px"><span class="avatar av-corail">${esc(l.leaver.name[0])}</span><div class="stack"><strong style="font-size:18px">${esc(l.leaver.name)}, l’étudiant·e qui part</strong><span class="muted">${esc(l.leaver.school)} · part le ${esc(l.leaver.leave)}</span></div></div>
+          <div class="row" style="align-items:flex-start;gap:20px">
+            <div class="stack" style="flex:1 1 240px;gap:4px"><strong>Ce que j’ai aimé</strong><p>${esc(l.leaver.liked)}</p></div>
+            <div class="stack" style="flex:1 1 240px;gap:4px"><strong>Ce qu’il faut savoir</strong><p>${esc(l.leaver.know)}</p></div>
+          </div>
+          <a class="btn btn-outline" style="align-self:flex-start" href="#messages" data-chat="${l.id}">${ic('msg')}Envoyer un message à ${esc(l.leaver.name)}</a>
+        </section>
+        <button type="button" class="btn" id="report" style="align-self:flex-start;background:transparent;color:var(--muted);padding:0;text-decoration:underline;font-weight:600">${ic('flag')}Signaler l’annonce</button>
+      </div>
+      <aside class="detail-side" id="contact">
+        <div class="sidecard">
+          <div class="row" style="gap:8px;align-items:baseline"><span class="price" style="font-size:42px;line-height:1">${eur(total(l))}</span><span class="muted">charges comprises / mois</span></div>
+          <span class="muted">Loyer ${eur(l.rent)} + charges ${eur(l.charges)} · disponible le ${esc(l.date)}</span>
+          <div class="stack" style="gap:12px;border-top:1px solid var(--line);padding-top:14px">
+            <div class="row" style="gap:12px;flex-wrap:nowrap"><span class="avatar av-sapin">${esc(l.landlord.name.replace(/^(M\.|Mme) /,'').slice(0,2).toUpperCase())}</span><div class="stack"><strong>${esc(l.landlord.name)}</strong><span class="muted" style="font-size:15px">Bailleur · ${esc(l.landlord.type)}</span></div></div>
+            <ul style="margin:0;padding-left:18px;font-size:15px;line-height:1.45">${l.landlord.cond.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+            <div id="coordBox">${coordBox(l)}</div>
+            <button type="button" class="btn btn-quiet" id="saveBtn" aria-pressed="${S.saved.has(l.id)}">${ic('heart')}${S.saved.has(l.id) ? 'Enregistré' : 'Enregistrer'}</button>
+          </div>
+        </div>
+        <div class="scam"><span style="color:var(--corail)">${ic('shield')}</span><span>Ne versez jamais d’argent avant d’avoir visité ou signé un bail.</span></div>
+      </aside>
+    </div>
+    <div class="mobile-cta"><div class="stack" style="flex:0 0 auto"><span class="price" style="font-size:22px">${eur(total(l))}</span><span class="hint">CC / mois</span></div>
+      <button type="button" class="icon-btn" id="saveBtn2" aria-pressed="${S.saved.has(l.id)}" aria-label="Enregistrer">${ic('heart')}</button>
+      <a href="#contact" class="btn btn-primary" style="flex:1" id="goContact">Contacter</a></div>
+  </div>`;
+  app.querySelectorAll('[data-tour]').forEach(b => b.addEventListener('click', () => openTour(l, +b.dataset.tour)));
+  const toggleSave = () => {
+    if (S.saved.has(l.id)) S.saved.delete(l.id); else S.saved.add(l.id);
+    toast(S.saved.has(l.id) ? 'Logement enregistré' : 'Retiré de vos logements enregistrés');
+    const on = S.saved.has(l.id);
+    document.getElementById('saveBtn').setAttribute('aria-pressed', on);
+    document.getElementById('saveBtn').innerHTML = ic('heart') + (on ? 'Enregistré' : 'Enregistrer');
+    document.getElementById('saveBtn2').setAttribute('aria-pressed', on);
+  };
+  document.getElementById('saveBtn').addEventListener('click', toggleSave);
+  document.getElementById('saveBtn2').addEventListener('click', toggleSave);
+  document.getElementById('goContact').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('contact').scrollIntoView({behavior:'smooth', block:'start'}); });
+  document.getElementById('report').addEventListener('click', () => toast('Merci. Notre équipe va vérifier cette annonce.'));
+  app.querySelectorAll('[data-chat]').forEach(a => a.addEventListener('click', () => { S.convWith = +a.dataset.chat; }));
+  bindCoord(l);
+}
+function coordBox(l){
+  if (S.verified) return `<div class="stack" style="gap:8px">
+      <span class="badge b-soft" style="align-self:flex-start">${ic('check')}Profil vérifié · coordonnées visibles</span>
+      <div class="coord"><span class="stack"><span class="hint">Téléphone</span><strong>${esc(l.landlord.tel)}</strong></span><button type="button" class="icon-btn" data-copy="${esc(l.landlord.tel)}" aria-label="Copier le téléphone">${ic('copy')}</button></div>
+      <div class="coord"><span class="stack"><span class="hint">E-mail</span><strong>${esc(l.landlord.mail)}</strong></span><button type="button" class="icon-btn" data-copy="${esc(l.landlord.mail)}" aria-label="Copier l’e-mail">${ic('copy')}</button></div>
+    </div>`;
+  if (S.codeSent) return `<form class="stack" id="codeForm" style="gap:10px">
+      <div class="field"><label for="code">Code reçu par e-mail</label><input class="input" id="code" inputmode="numeric" autocomplete="one-time-code" value="482913"><span class="hint">Démo : n’importe quel code à 6 chiffres fonctionne.</span></div>
+      <button class="btn btn-primary" type="submit">Valider et voir les coordonnées</button></form>`;
+  return `<div class="stack" style="gap:10px">
+      <div class="masked">${ic('lock')}<span>${esc(l.landlord.tel.slice(0,2))} •• •• •• •• · e-mail masqué</span></div>
+      <form class="stack" id="verifForm" style="gap:10px">
+        <div class="field"><label for="umail">Votre e-mail universitaire</label><input class="input" id="umail" type="email" required value="prenom.nom@etudiant.exemple.fr"></div>
+        <button class="btn btn-primary" type="submit">${ic('eye')}Voir les coordonnées du bailleur</button>
+      </form>
+      <span class="hint">Réservé aux étudiants vérifiés, pour protéger les bailleurs du démarchage et limiter les arnaques.</span>
+    </div>`;
+}
+function bindCoord(l){
+  const box = document.getElementById('coordBox');
+  const redraw = () => { box.innerHTML = coordBox(l); bindCoord(l); };
+  const vf = document.getElementById('verifForm');
+  if (vf) vf.addEventListener('submit', e => { e.preventDefault(); S.codeSent = true; toast('Code de vérification envoyé (démo)'); redraw(); document.getElementById('code').focus(); });
+  const cf = document.getElementById('codeForm');
+  if (cf) cf.addEventListener('submit', e => {
+    e.preventDefault();
+    const v = document.getElementById('code').value.trim();
+    if (!/^\d{6}$/.test(v)) { toast('Le code contient 6 chiffres.'); return; }
+    S.verified = true; S.user = S.user || 'Camille'; setNav(currentRoute()); toast('Profil vérifié'); redraw();
+  });
+  box.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+    const txt = b.dataset.copy;
+    Promise.resolve().then(() => navigator.clipboard.writeText(txt)).then(() => toast('Copié : ' + txt)).catch(() => {
+      const s = b.parentElement.querySelector('strong'); const r = document.createRange(); r.selectNodeContents(s);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Texte sélectionné, copiez-le avec Ctrl+C');
+    });
+  }));
+}
+
+/* ---------- Visite virtuelle ---------- */
+let tourState = null;
+function openTour(l, room){
+  tourState = {l, r:room, p:0, last:document.activeElement};
+  document.body.style.overflow = 'hidden';
+  renderTour();
+  document.addEventListener('keydown', tourKeys);
+}
+function closeTour(){
+  document.getElementById('tourRoot').innerHTML = '';
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', tourKeys);
+  if (tourState && tourState.last) tourState.last.focus();
+  tourState = null;
+}
+function tourMove(d){
+  const t = tourState, rooms = t.l.rooms;
+  if (d > 0) { if (t.p < rooms[t.r].n - 1) t.p++; else if (t.r < rooms.length - 1) { t.r++; t.p = 0; } }
+  else { if (t.p > 0) t.p--; else if (t.r > 0) { t.r--; t.p = rooms[t.r].n - 1; } }
+  renderTour();
+}
+function tourKeys(e){
+  if (!tourState) return;
+  if (e.key === 'Escape') closeTour();
+  if (e.key === 'ArrowRight') tourMove(1);
+  if (e.key === 'ArrowLeft') tourMove(-1);
+}
+function renderTour(){
+  const t = tourState, rooms = t.l.rooms, room = rooms[t.r];
+  const tone = (t.r + t.p) % 3 + 1;
+  const root = document.getElementById('tourRoot');
+  root.innerHTML = `<div class="tour" role="dialog" aria-modal="true" aria-label="Visite virtuelle">
+    <div class="tour-top">
+      <div class="stack"><span style="font-size:13px;color:#B7C2BC">Étape ${t.r + 1} sur ${rooms.length} · photo ${t.p + 1} / ${room.n}</span><strong>${esc(title(t.l))} · ${esc(t.l.where)}</strong></div>
+      <button type="button" id="tClose" aria-label="Fermer la visite">${ic('close')}</button>
+    </div>
+    <div class="tour-bars" style="grid-template-columns:repeat(${rooms.length}, minmax(0,1fr))">${rooms.map((x,i) => `<i class="${i <= t.r ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="tour-stage ph t${tone}" id="stage">${motif}<span class="ph-label">Photo ${t.p + 1} · ${esc(room.name)}</span>
+      <button type="button" class="tour-nav prev" id="tPrev" aria-label="Photo précédente">${ic('left')}</button>
+      <button type="button" class="tour-nav next" id="tNext" aria-label="Photo suivante">${ic('right')}</button>
+    </div>
+    <div class="tour-info"><h2>${esc(room.name)}</h2><span style="color:#B7C2BC;font-weight:600">${esc(room.area)}</span><p>${esc(room.desc)}</p></div>
+    <div class="tour-thumbs">${Array.from({length:room.n}, (x,i) => `<button type="button" class="ph t${(t.r + i) % 3 + 1}" data-ph="${i}" aria-label="Photo ${i + 1}" aria-current="${i === t.p}"></button>`).join('')}</div>
+    <nav class="tour-rooms" aria-label="Pièces">${rooms.map((x,i) => `<button type="button" data-room="${i}" aria-current="${i === t.r ? 'step' : 'false'}">${esc(x.name.replace(' et parties communes',''))}</button>`).join('')}</nav>
+    <div class="tour-foot"><button type="button" class="btn btn-primary" style="flex:1;max-width:420px" id="tContact">Contacter le bailleur</button></div>
+  </div>`;
+  document.getElementById('tClose').addEventListener('click', closeTour);
+  document.getElementById('tPrev').addEventListener('click', () => tourMove(-1));
+  document.getElementById('tNext').addEventListener('click', () => tourMove(1));
+  root.querySelectorAll('[data-ph]').forEach(b => b.addEventListener('click', () => { t.p = +b.dataset.ph; renderTour(); }));
+  root.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => { t.r = +b.dataset.room; t.p = 0; renderTour(); }));
+  document.getElementById('tContact').addEventListener('click', () => { closeTour(); const c = document.getElementById('contact'); if (c) c.scrollIntoView({behavior:'smooth'}); });
+  const st = document.getElementById('stage'); let x0 = null;
+  st.addEventListener('pointerdown', e => { x0 = e.clientX; });
+  st.addEventListener('pointerup', e => { if (x0 !== null && Math.abs(e.clientX - x0) > 40) tourMove(e.clientX < x0 ? 1 : -1); x0 = null; });
+  document.getElementById('tClose').focus();
+}
+
+/* ---------- Publier ---------- */
+function viewPublish(){
+  const P = S.pub, step = P.step;
+  const names = ['Le logement','La visite virtuelle','Le coût','Le bailleur','Disponibilité et aperçu'];
+  const blocked = step === 4 && !P.consent;
+  let body = '';
+  if (step === 1) body = `
+    <div class="field"><label for="p-adr">Adresse</label><input class="input" id="p-adr" value="Rue fictive, 35000 Rennes"><span class="hint">Seul le quartier est affiché publiquement.</span></div>
+    <fieldset style="border:0;margin:0;padding:0"><legend class="label" style="margin-bottom:8px">Type</legend><div class="row" style="gap:8px">${TYPES.map(t => `<button type="button" class="chip" data-ptype="${esc(t)}" aria-pressed="${P.type === t}">${esc(t)}</button>`).join('')}</div></fieldset>
+    <div class="row" style="gap:12px;align-items:flex-start"><div class="field" style="flex:1 1 140px"><label for="p-surf">Surface (m²)</label><input class="input" id="p-surf" type="number" value="22"></div><div class="field" style="flex:1 1 140px"><label for="p-etage">Étage</label><input class="input" id="p-etage" value="3e"></div></div>
+    <div class="row" style="gap:4px 24px"><label class="check"><input type="checkbox" checked>Meublé</label><label class="check"><input type="checkbox" checked>Ascenseur</label></div>
+    <fieldset style="border:0;margin:0;padding:0"><legend class="label" style="margin-bottom:4px">Équipements</legend><div class="row" style="gap:0 24px">${Object.keys(EQUIP).map((k,i) => `<label class="check"><input type="checkbox"${i < 5 ? ' checked' : ''}>${EQUIP[k]}</label>`).join('')}</div></fieldset>`;
+  if (step === 2) body = `
+    <p class="muted">Ajoutez 2 à 4 photos par pièce, puis glissez les pièces dans l’ordre de la visite (ou utilisez la flèche).</p>
+    <div class="note" style="background:var(--sapin-soft);align-items:center">${ph('Bon exemple',1,'','')}<ul style="margin:0;padding-left:18px"><li>Lumière du jour, rideaux ouverts</li><li>Cadrage large, depuis un angle</li><li>Pièce rangée, lit fait</li></ul></div>
+    <ol id="roomList" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">${P.rooms.map((r,i) => `
+      <li class="room-item" draggable="true" data-i="${i}">
+        <div class="head"><span class="muted" style="cursor:grab">${ic('grip')}</span><strong style="flex:1">${i + 1}. ${esc(r[0])}</strong><span class="hint">${r[1].length} photo${r[1].length > 1 ? 's' : ''}</span>
+          <button type="button" class="icon-btn" data-up="${i}" aria-label="Monter ${esc(r[0])}"${i === 0 ? ' disabled' : ''}>${ic('up')}</button></div>
+        <div class="thumbs">${r[1].map(src => `<span class="thumb"><img src="${src}" alt=""></span>`).join('')}
+          <label class="add-photo" aria-label="Ajouter des photos à ${esc(r[0])}">${ic('plus')}<input type="file" accept="image/*" multiple data-add="${i}"></label></div>
+      </li>`).join('')}</ol>
+    <form class="row" id="addRoom" style="gap:8px;flex-wrap:nowrap"><label for="newRoom" class="sr">Nom de la pièce</label><input class="input" id="newRoom" placeholder="Ajouter une pièce (ex. Balcon)"><button class="btn btn-quiet" type="submit">Ajouter</button></form>`;
+  if (step === 3) body = `
+    <div class="row" style="gap:12px;align-items:flex-start"><div class="field" style="flex:1 1 140px"><label for="p-loyer">Loyer hors charges (€)</label><input class="input" id="p-loyer" type="number" value="380"></div><div class="field" style="flex:1 1 140px"><label for="p-ch">Charges (€)</label><input class="input" id="p-ch" type="number" value="50"></div></div>
+    <div class="costs"><div><span>Total charges comprises</span><strong class="d" style="font-size:20px" id="p-tot">430 €</strong></div></div>
+    <div class="field"><label for="p-dep">Dépôt de garantie (€)</label><input class="input" id="p-dep" type="number" value="760"><span class="hint">Meublé : 2 mois de loyer hors charges maximum. Vide : 1 mois.</span></div>
+    <label class="check"><input type="checkbox" checked>Je touchais les APL dans ce logement</label>
+    <div class="field"><label for="p-real">Mes dépenses réelles (facultatif)</label><input class="input" id="p-real" value="Électricité ≈ 25 € / mois, internet 25 €"><span class="hint">Aide la personne qui arrive à estimer son vrai budget.</span></div>`;
+  if (step === 4) body = `
+    <div class="field"><label for="p-bt">Type de bailleur</label><select class="input" id="p-bt"><option>Particulier</option><option>Agence</option><option>Résidence</option></select></div>
+    <div class="field"><label for="p-bn">Nom</label><input class="input" id="p-bn" value="M. Exemple"></div>
+    <div class="row" style="gap:12px;align-items:flex-start"><div class="field" style="flex:1 1 180px"><label for="p-btel">Téléphone</label><input class="input" id="p-btel" type="tel" value="06 00 00 00 00"></div><div class="field" style="flex:1 1 180px"><label for="p-bm">E-mail</label><input class="input" id="p-bm" type="email" value="bailleur@exemple.fr"></div></div>
+    <fieldset style="border:0;margin:0;padding:0"><legend class="label">Conditions demandées</legend><label class="check"><input type="checkbox" checked>Garant demandé</label><label class="check"><input type="checkbox" checked>Garantie Visale acceptée</label><label class="check"><input type="checkbox" checked>Dossier requis</label></fieldset>
+    <label class="consent${P.consent ? ' ok' : ''}"><input type="checkbox" id="consent"${P.consent ? ' checked' : ''} required><span><strong>Obligatoire.</strong> J’ai informé mon bailleur et il accepte d’être contacté via Passe-Clé.</span></label>
+    <span class="hint">Ses coordonnées ne seront visibles que par des étudiants vérifiés.</span>`;
+  if (step === 5) body = `
+    <div class="row" style="gap:12px;align-items:flex-start"><div class="field" style="flex:1 1 160px"><label for="p-dispo">Libre le</label><input class="input" id="p-dispo" value="1er juillet"></div><div class="field" style="flex:1 1 160px"><label for="p-dep2">Je pars le</label><input class="input" id="p-dep2" value="30 juin"></div></div>
+    <div class="field"><label for="p-mot">Mon petit mot : ce que j’ai aimé, ce qu’il faut savoir</label><textarea class="input" id="p-mot">Très lumineux le matin, la fac à 5 minutes. Chauffage électrique : la facture monte un peu en hiver.</textarea></div>
+    <strong>Votre annonce apparaîtra ainsi</strong>
+    <div style="max-width:340px">${cardPreview()}</div>`;
+  app.innerHTML = `<div class="view narrow">
+    <div class="stack" style="gap:10px">
+      <div class="row" style="justify-content:space-between"><span class="label">Je libère mon logement</span><span class="hint">Étape ${step} sur 5 · environ ${[9,7,4,3,1][step - 1]} min restantes</span></div>
+      <div class="progress" role="progressbar" aria-label="Progression" aria-valuemin="1" aria-valuemax="5" aria-valuenow="${step}">${[1,2,3,4,5].map(n => `<i class="${n <= step ? 'on' : ''}"></i>`).join('')}</div>
+    </div>
+    <h1 style="font-size:clamp(28px,4vw,36px);font-weight:800">${names[step - 1]}</h1>
+    ${body}
+    <div class="stepfoot">
+      ${step > 1 ? '<button type="button" class="btn btn-quiet" id="pBack">Retour</button>' : ''}
+      ${step < 5 ? `<button type="button" class="btn btn-sapin" style="flex:1" id="pNext"${blocked ? ' disabled' : ''}>Continuer</button>` : '<button type="button" class="btn btn-primary" style="flex:1" id="pPublish">Publier mon annonce</button>'}
+    </div>
+  </div>`;
+  const go = (n) => { P.step = n; viewPublish(); scrollTo(0,0); };
+  const back = document.getElementById('pBack'); if (back) back.addEventListener('click', () => go(step - 1));
+  const next = document.getElementById('pNext'); if (next) next.addEventListener('click', () => go(step + 1));
+  app.querySelectorAll('[data-ptype]').forEach(b => b.addEventListener('click', () => { P.type = b.dataset.ptype; app.querySelectorAll('[data-ptype]').forEach(x => x.setAttribute('aria-pressed', x === b)); }));
+  if (step === 2) bindRooms();
+  if (step === 3) {
+    const upd = () => { document.getElementById('p-tot').textContent = eur((+document.getElementById('p-loyer').value || 0) + (+document.getElementById('p-ch').value || 0)); };
+    ['p-loyer','p-ch'].forEach(id => document.getElementById(id).addEventListener('input', upd));
+  }
+  if (step === 4) document.getElementById('consent').addEventListener('change', e => { P.consent = e.target.checked; viewPublish(); document.getElementById('consent').focus(); });
+  const pub = document.getElementById('pPublish');
+  if (pub) pub.addEventListener('click', () => {
+    const base = LISTINGS[0];
+    S.mine.push(Object.assign({}, base, {id:100 + S.mine.length, kind:P.type, verified:false, leaver:Object.assign({}, base.leaver, {name:S.user || 'Vous'})}));
+    S.pub = {step:1, type:'Studio', consent:false, rooms:P.rooms};
+    S.espaceTab = 'leave';
+    toast('Annonce publiée. Elle sera vérifiée avant d’apparaître.');
+    location.hash = 'espace';
+  });
+}
+function cardPreview(){
+  const P = S.pub;
+  return `<div class="lcard">${ph('Photo · ' + P.rooms[1][0], 1, '', `<span class="badge b-white">${ic('camera')}Visite virtuelle · ${P.rooms.length} pièces</span>`)}
+    <div class="stack" style="gap:2px"><div class="row" style="gap:6px;align-items:baseline"><span class="price">430 €</span><span class="muted">CC / mois</span></div><strong>${esc(P.type)} · 22 m² · Villejean</strong><span class="trip">5 min à pied de Rennes 2 Villejean</span><span class="muted">Disponible le 1er juillet</span></div></div>`;
+}
+function bindRooms(){
+  const P = S.pub;
+  app.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.up; if (!i) return; const r = P.rooms; [r[i-1], r[i]] = [r[i], r[i-1]]; viewPublish();
+    const nb = app.querySelector(`[data-up="${i-1}"]`); if (nb && !nb.disabled) nb.focus();
+  }));
+  app.querySelectorAll('[data-add]').forEach(inp => inp.addEventListener('change', () => {
+    const i = +inp.dataset.add; const files = Array.from(inp.files || []).slice(0, 4);
+    let left = files.length; if (!left) return;
+    files.forEach(f => { const fr = new FileReader(); fr.onload = () => { P.rooms[i][1].push(fr.result); if (--left === 0) viewPublish(); }; fr.readAsDataURL(f); });
+  }));
+  let from = null;
+  app.querySelectorAll('.room-item').forEach(li => {
+    li.addEventListener('dragstart', () => { from = +li.dataset.i; li.classList.add('dragging'); });
+    li.addEventListener('dragend', () => li.classList.remove('dragging'));
+    li.addEventListener('dragover', e => e.preventDefault());
+    li.addEventListener('drop', e => { e.preventDefault(); const to = +li.dataset.i; if (from === null || from === to) return; const [m] = P.rooms.splice(from, 1); P.rooms.splice(to, 0, m); from = null; viewPublish(); });
+  });
+  document.getElementById('addRoom').addEventListener('submit', e => {
+    e.preventDefault(); const v = document.getElementById('newRoom').value.trim(); if (!v) return; P.rooms.push([v, []]); viewPublish();
+  });
+}
+
+/* ---------- Espace personnel ---------- */
+function viewSpace(){
+  const seek = S.espaceTab === 'seek';
+  const saved = LISTINGS.filter(l => S.saved.has(l.id));
+  const mine = S.mine.length ? S.mine : [];
+  app.innerHTML = `<div class="view narrow">
+    <div class="row" style="gap:12px"><span class="avatar" style="background:var(--sapin);color:var(--on-sapin);width:56px;height:56px">${esc((S.user || 'C')[0])}</span><div class="stack"><span class="muted">Bonjour</span><h1 style="font-size:28px;font-weight:800">${esc(S.user || 'Camille')}</h1></div></div>
+    <div class="note" style="background:var(--sapin-soft)"><span style="color:var(--sapin)">${ic('shield')}</span><div class="stack" style="gap:2px">
+      ${S.verified ? '<strong>Profil étudiant vérifié</strong><span class="muted">Par e-mail universitaire. Vous pouvez voir les coordonnées des bailleurs.</span>' : '<strong>Profil pas encore vérifié</strong><span class="muted">Vérifiez votre e-mail universitaire depuis une annonce ou à l’inscription.</span><a href="#connexion" style="font-weight:700">Vérifier mon profil</a>'}</div></div>
+    <div class="seg" role="tablist" aria-label="Mon profil"><button type="button" role="tab" aria-selected="${seek}" data-tab="seek">Je cherche</button><button type="button" role="tab" aria-selected="${!seek}" data-tab="leave">Je pars</button></div>
+    ${seek ? `
+      <section class="stack" style="gap:10px"><h2 style="font-size:22px;font-weight:700">Logements enregistrés · ${saved.length}</h2>
+        ${saved.length ? saved.map(l => `<a class="list-item" href="#logement-${l.id}">${ph('',l.tone)}<span class="stack"><span class="price" style="font-size:20px">${eur(total(l))} CC</span><strong style="font-size:15px">${esc(title(l))}</strong><span class="hint">${esc(l.where)}</span></span></a>`).join('') : '<div class="empty"><span class="muted">Touchez le cœur d’une annonce pour la retrouver ici.</span><a class="btn btn-sapin" href="#recherche">Chercher un logement</a></div>'}</section>
+      <section class="stack" style="gap:10px"><h2 style="font-size:22px;font-weight:700">Mes alertes</h2>
+        ${S.alerts.map((a,i) => `<div class="list-item" style="justify-content:space-between"><span class="stack"><strong style="font-size:15px">${esc(a.title)}</strong><span class="hint">${esc(a.sub)}</span></span><button type="button" class="switch" role="switch" aria-checked="${a.on}" data-alert="${i}" aria-label="Alerte ${esc(a.title)}"><span></span></button></div>`).join('')}
+        <a class="btn btn-quiet" href="#recherche">Créer une alerte depuis une recherche</a></section>` : `
+      <section class="stack" style="gap:10px"><h2 style="font-size:22px;font-weight:700">Mes annonces</h2>
+        ${mine.length ? mine.map(l => `<div style="border:1px solid var(--line);border-radius:18px;overflow:hidden">
+          ${ph('Photo · ' + l.rooms[1].name, 1, '', `<span class="badge ${S.given[l.id] ? 'b-dark' : 'b-line'}" style="background:${S.given[l.id] ? '#17201C' : '#FFFFFF'};color:${S.given[l.id] ? '#FFFFFF' : '#17201C'}">${S.given[l.id] ? 'Logement attribué' : 'En attente de vérification'}</span>`).replace('class="ph t1 "','class="ph t1" style="height:150px"')}
+          <div class="stack" style="gap:12px;padding:14px">
+            <div class="stack"><strong class="d" style="font-size:21px">${esc(title(l))}</strong><span class="hint">${esc(l.where)} · ${eur(total(l))} CC · libre le ${esc(l.date)}</span></div>
+            <div class="stats"><div><strong>0</strong><span class="hint">vues</span></div><div><strong>0</strong><span class="hint">messages</span></div><div><strong>0</strong><span class="hint">enregistrements</span></div></div>
+            <div class="row" style="gap:8px"><a class="btn btn-quiet" style="flex:1" href="#publier">Modifier</a><button type="button" class="btn ${S.given[l.id] ? 'btn-quiet' : 'btn-sapin'}" style="flex:1.4" data-given="${l.id}" aria-pressed="${!!S.given[l.id]}">${S.given[l.id] ? 'Remettre en ligne' : 'Marquer comme attribué'}</button></div>
+          </div></div>`).join('') : '<div class="empty"><strong>Vous n’avez pas encore d’annonce</strong><span class="muted">Publiez votre logement en moins de 10 minutes.</span><a class="btn btn-primary" href="#publier">Je libère mon logement</a></div>'}
+      </section>`}
+    <section class="stack" style="gap:10px"><h2 style="font-size:22px;font-weight:700">Messages</h2>
+      ${Object.keys(S.convs).map(id => { const l = LISTINGS.find(x => x.id === +id); const m = S.convs[id]; const last = m[m.length - 1];
+        return `<a class="list-item" href="#messages" data-chat="${id}"><span class="avatar av-corail">${esc(l.leaver.name[0])}</span><span class="stack" style="flex:1;min-width:0"><strong>${esc(l.leaver.name)} · ${esc(l.kind)} ${esc(l.where)}</strong><span class="hint" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(last.text)}</span></span></a>`; }).join('')}
+    </section>
+  </div>`;
+  app.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { S.espaceTab = b.dataset.tab; viewSpace(); }));
+  app.querySelectorAll('[data-alert]').forEach(b => b.addEventListener('click', () => { const a = S.alerts[+b.dataset.alert]; a.on = !a.on; b.setAttribute('aria-checked', a.on); toast(a.on ? 'Alerte activée' : 'Alerte désactivée'); }));
+  app.querySelectorAll('[data-given]').forEach(b => b.addEventListener('click', () => { const id = b.dataset.given; S.given[id] = !S.given[id]; toast(S.given[id] ? 'Logement marqué comme attribué' : 'Annonce remise en ligne'); viewSpace(); }));
+  app.querySelectorAll('[data-chat]').forEach(a => a.addEventListener('click', () => { S.convWith = +a.dataset.chat; }));
+}
+
+/* ---------- Messagerie ---------- */
+const REPLIES = {
+  'Le logement est-il toujours disponible ?':'Oui, il est toujours disponible !',
+  'Peut-on organiser une visite en visio ?':'Avec plaisir. Je suis libre jeudi à 18 h, ça vous va ?',
+  'Le bailleur est-il facile à joindre ?':'Oui, il répond vite, plutôt par téléphone en fin de journée.'
+};
+function viewMessages(){
+  const id = S.convWith; const l = LISTINGS.find(x => x.id === id) || LISTINGS[0];
+  if (!S.convs[l.id]) S.convs[l.id] = [];
+  const msgs = S.convs[l.id];
+  app.innerHTML = `<div class="view chat">
+    <div class="convs" role="tablist" aria-label="Conversations">${Object.keys(S.convs).map(k => { const x = LISTINGS.find(y => y.id === +k); return `<button type="button" class="chip" role="tab" aria-pressed="${+k === l.id}" aria-selected="${+k === l.id}" data-conv="${k}">${esc(x.leaver.name)} · ${esc(x.where)}</button>`; }).join('')}</div>
+    <a class="list-item" href="#logement-${l.id}" style="background:var(--soft);border-color:transparent">${ph('',l.tone)}<span class="stack" style="flex:1"><strong>${esc(title(l))} · ${esc(l.where)}</strong><span class="hint">${eur(total(l))} CC · libre le ${esc(l.date)}</span></span>${ic('right')}</a>
+    <div class="row" style="gap:10px"><span class="avatar av-corail">${esc(l.leaver.name[0])}</span><div class="stack"><strong>${esc(l.leaver.name)}</strong><span class="hint">Étudiant·e sortant·e · ${esc(l.leaver.school)} · vérifié·e</span></div></div>
+    <div class="bubbles" id="bubbles" aria-live="polite">${msgs.length ? msgs.map(m => `<div class="bubble${m.me ? ' me' : ''}">${esc(m.text)}</div>`).join('') : '<div class="empty"><strong>Démarrez la conversation</strong><span class="muted">Choisissez un message ci-dessous ou écrivez le vôtre.</span></div>'}</div>
+    <div class="filters-row">${Object.keys(REPLIES).map(q => `<button type="button" class="chip" style="border-color:var(--sapin);color:var(--sapin)" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <form class="composer" id="composer"><label for="msg" class="sr">Votre message</label><input class="input" id="msg" placeholder="Votre message…" autocomplete="off"><button class="icon-btn" type="submit" aria-label="Envoyer" style="background:var(--corail);color:var(--on-corail);border:0;border-radius:999px">${ic('send')}</button></form>
+  </div>`;
+  const send = (text) => {
+    msgs.push({me:true, text}); viewMessages();
+    setTimeout(() => { msgs.push({me:false, text:REPLIES[text] || 'Merci pour votre message, je vous réponds vite !'}); if (currentRoute() === 'messages' && S.convWith === l.id) viewMessages(); }, 700);
+  };
+  app.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', () => send(b.dataset.q)));
+  app.querySelectorAll('[data-conv]').forEach(b => b.addEventListener('click', () => { S.convWith = +b.dataset.conv; viewMessages(); }));
+  document.getElementById('composer').addEventListener('submit', e => { e.preventDefault(); const v = document.getElementById('msg').value.trim(); if (v) send(v); });
+  const bub = document.getElementById('bubbles'); const last = bub.lastElementChild; if (last && msgs.length) last.scrollIntoView({block:'nearest'});
+}
+
+/* ---------- Connexion ---------- */
+function viewLogin(){
+  app.innerHTML = `<div class="view narrow">
+    <div class="seg" role="tablist" aria-label="Compte"><button type="button" role="tab" aria-selected="${!viewLogin.login}" data-m="0">Créer un compte</button><button type="button" role="tab" aria-selected="${!!viewLogin.login}" data-m="1">Se connecter</button></div>
+    ${viewLogin.login ? `
+      <h1 style="font-size:clamp(28px,4vw,36px);font-weight:800">Content de vous revoir</h1>
+      <form class="stack" id="lf" style="gap:16px">
+        <div class="field"><label for="l-mail">E-mail</label><input class="input" id="l-mail" type="email" required value="prenom.nom@etudiant.exemple.fr"></div>
+        <div class="field"><label for="l-pw">Mot de passe</label><input class="input" id="l-pw" type="password" required value="motdepasse-demo"></div>
+        <button class="btn btn-primary btn-lg" type="submit">Se connecter</button></form>` : `
+      <h1 style="font-size:clamp(28px,4vw,36px);font-weight:800">Bienvenue sur Passe-Clé</h1>
+      <form class="stack" id="sf" style="gap:16px">
+        <fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px"><legend class="label" style="margin-bottom:8px">Vous êtes ici pour…</legend>
+          ${[['seek','Je cherche un logement','Visiter, enregistrer, créer des alertes'],['leave','Je libère mon logement','Publier et trouver mon successeur'],['both','Les deux','Je déménage d’un logement à un autre']].map((p,i) => `<label class="list-item" style="cursor:pointer"><input type="radio" name="prof" value="${p[0]}"${i === 0 ? ' checked' : ''} style="width:22px;height:22px;accent-color:var(--sapin)"><span class="stack"><strong>${p[1]}</strong><span class="hint">${p[2]}</span></span></label>`).join('')}
+        </fieldset>
+        <div class="row" style="gap:12px;align-items:flex-start"><div class="field" style="flex:1 1 160px"><label for="i-p">Prénom</label><input class="input" id="i-p" required value="Camille"></div><div class="field" style="flex:1 1 160px"><label for="i-e">Établissement</label><input class="input" id="i-e" value="Université Rennes 2"></div></div>
+        <div class="field"><label for="i-m">E-mail universitaire</label><input class="input" id="i-m" type="email" required value="prenom.nom@etudiant.exemple.fr"><span class="hint">Avec votre e-mail universitaire, la vérification est immédiate. Sinon, envoyez un certificat de scolarité.</span></div>
+        <div class="field"><label for="i-pw">Mot de passe</label><input class="input" id="i-pw" type="password" required minlength="12" value="motdepasse-demo"><span class="hint">12 caractères minimum.</span></div>
+        <div class="field"><label for="i-cert">Certificat de scolarité (facultatif)</label><input class="input" id="i-cert" type="file" accept=".pdf,image/*" style="padding-top:12px"></div>
+        <label class="check" style="align-items:flex-start"><input type="checkbox" required style="margin-top:2px">J’accepte les conditions d’utilisation et la charte de confiance de Passe-Clé.</label>
+        <button class="btn btn-primary btn-lg" type="submit">Créer mon compte</button></form>`}
+  </div>`;
+  app.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => { viewLogin.login = b.dataset.m === '1'; viewLogin(); }));
+  const done = (name) => { S.user = name; S.verified = true; toast('Bienvenue ' + name + ', profil vérifié'); location.hash = 'espace'; };
+  const sf = document.getElementById('sf'); if (sf) sf.addEventListener('submit', e => { e.preventDefault(); S.espaceTab = sf.prof.value === 'leave' ? 'leave' : 'seek'; done(document.getElementById('i-p').value.trim() || 'Camille'); });
+  const lf = document.getElementById('lf'); if (lf) lf.addEventListener('submit', e => { e.preventDefault(); done('Camille'); });
+}
+
+/* ---------- Routeur ---------- */
+function currentRoute(){ const h = location.hash.replace('#',''); return h.startsWith('logement-') ? 'logement' : (h || 'accueil'); }
+function route(){
+  if (tourState) closeTour();
+  const h = location.hash.replace('#','');
+  const r = currentRoute();
+  if (r === 'logement') viewListing(+h.split('-')[1]);
+  else if (r === 'recherche') viewSearch();
+  else if (r === 'publier') viewPublish();
+  else if (r === 'espace') viewSpace();
+  else if (r === 'messages') viewMessages();
+  else if (r === 'connexion') viewLogin();
+  else if (r === 'contact') return;
+  else viewHome();
+  setNav(r === 'logement' ? 'recherche' : r);
+  scrollTo(0, 0);
+}
+addEventListener('hashchange', route);
+route();
+})();
+</script>
+</body>
+</html>

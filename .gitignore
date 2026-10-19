@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Système et éditeurs
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Dépendances, builds, Vercel
+node_modules/
+dist/
+build/
+.next/
+.vercel/
+
+# Logs et temporaires
+*.log
+*.tmp
