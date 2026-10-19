@@ -1,7 +1,7 @@
 # Plateforme de logement étudiant à Rennes (nom de travail : Passe-Clé)
 
 **Pour qui :** projet personnel (portfolio, puis potentiel projet entrepreneurial)
-**État :** en cours, phase de conception (design)
+**État :** prototype de démo en ligne (annonces fictives), phase de test auprès d'étudiants
 **Créé le :** 2026-10-19
 
 ## Le concept
@@ -17,7 +17,9 @@ Mettre en relation, à Rennes, les étudiants qui quittent leur logement et ceux
 
 ## Liens
 
-- Prototype sur claude.ai (privé) : https://claude.ai/artifact/2xjGY1u4ZFvbFVNkYT7mcS
+- **Site de démo en ligne : https://passe-cle.vercel.app/** (hébergé sur Vercel, mis à jour automatiquement à chaque envoi sur GitHub)
+- Code source : https://github.com/CharmesSoglohoun/passe-cle
+- Prototype d'origine sur claude.ai (privé) : https://claude.ai/artifact/2xjGY1u4ZFvbFVNkYT7mcS
 - Pour tester en local : double-cliquer sur `index.html`
 
 ## Prochaines étapes possibles
