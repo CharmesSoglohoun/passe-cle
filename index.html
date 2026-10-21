@@ -352,7 +352,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;'
 const eur = (n) => n.toLocaleString('fr-FR') + ' €';
 const motif = '<svg class="motif" viewBox="0 0 120 90" aria-hidden="true"><rect x="22" y="8" width="76" height="62" rx="3"/><path d="M60 8v62M22 39h76M10 82h100"/></svg>';
 const img = (src, eager=false) => src ? `<img class="photo" src="${src}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" draggable="false">` : motif;
-const ph = (label, tone=1, extra='', badges='', src='') => `<div class="ph t${tone} ${extra}">${img(src)}${badges ? `<div class="badges">${badges}</div>` : ''}${label ? `<span class="ph-label">${esc(label)}</span>` : ''}</div>`;
+const ph = (label, tone=1, extra='', badges='', src='', eager=false) => `<div class="ph t${tone} ${extra}">${img(src, eager)}${badges ? `<div class="badges">${badges}</div>` : ''}${label ? `<span class="ph-label">${esc(label)}</span>` : ''}</div>`;
 
 /* ---------- Photos d'illustration (Unsplash, voir photos/CREDITS.md) ---------- */
 /* Une liste par étape de la visite : entrée, pièce principale, cuisine, salle de bain, vue, immeuble */
@@ -500,7 +500,7 @@ function viewHome(){
           <a class="btn btn-lg" style="background:var(--corail-soft);color:var(--ink);border:1.5px solid var(--corail)" href="#publier">Je libère mon logement</a>
         </div>
       </div>
-      <div class="hero-photos" aria-hidden="true">${ph('Pièce principale',1,'','','photos/piece-1.jpg')}${ph('Cuisine',2,'','','photos/cuisine-1.jpg')}${ph('Vue sur cour',3,'','','photos/vue-1.jpg')}</div>
+      <div class="hero-photos" aria-hidden="true">${ph('Pièce principale',1,'','','photos/piece-1.jpg',true)}${ph('Cuisine',2,'','','photos/cuisine-1.jpg',true)}${ph('Vue sur cour',3,'','','photos/vue-1.jpg',true)}</div>
     </section>
     <form class="searchbar" id="homeSearch">
       <div class="field"><label for="h-campus">Campus ou quartier</label><select class="input" id="h-campus">${campusOptions(S.q.campus)}</select></div>
@@ -674,7 +674,7 @@ function viewListing(id){
     <a class="back" href="#recherche">${ic('left')}Retour aux résultats</a>
     <div class="gallery">
       <button type="button" class="main ph t${l.tone}" data-tour="1" aria-label="Démarrer la visite virtuelle">${img(photoFor(l, 1), true)}<div class="badges"><span class="badge b-white">${ic('camera')}Visite virtuelle · ${l.rooms.length} pièces</span></div><span class="ph-label" style="left:auto;right:10px">Photo · ${esc(l.rooms[1].name)}</span><span class="btn btn-primary btn-lg start">${ic('camera')}Démarrer la visite</span></button>
-      ${tiles.map((r,i) => `<button type="button" class="ph t${(l.tone + i) % 3 + 1}" data-tour="${r}" aria-label="Voir ${esc(l.rooms[r].name)}">${img(photoFor(l, r))}<span class="ph-label">${esc(l.rooms[r].name)}</span></button>`).join('')}
+      ${tiles.map((r,i) => `<button type="button" class="ph t${(l.tone + i) % 3 + 1}" data-tour="${r}" aria-label="Voir ${esc(l.rooms[r].name)}">${img(photoFor(l, r), true)}<span class="ph-label">${esc(l.rooms[r].name)}</span></button>`).join('')}
     </div>
     <p class="hint" style="margin-top:8px">Photos d’illustration : logement fictif, site de démonstration.</p>
     <div class="detail">
