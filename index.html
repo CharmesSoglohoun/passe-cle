@@ -93,6 +93,8 @@ button,input,select,textarea{font:inherit; color:inherit}
 .ph svg.motif{position:absolute; left:50%; top:50%; width:44%; max-width:180px; transform:translate(-50%,-56%); stroke:var(--ph-line); fill:none; stroke-width:1.5}
 .ph .ph-label{position:absolute; left:10px; bottom:10px; font-size:12px; font-weight:600; background:rgba(255,255,255,.82); color:#3E4642; padding:4px 9px; border-radius:999px}
 .ph .badges{position:absolute; top:10px; left:10px; display:flex; flex-wrap:wrap; gap:6px; right:10px}
+.ph img.photo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block}
+.ph .ph-label,.ph .badges,.gallery .start{z-index:1}
 
 /* Champs */
 .field{display:flex; flex-direction:column; gap:6px; min-width:0}
@@ -219,7 +221,10 @@ thead th{border-top:0; color:var(--muted); font-weight:600}
 .tour-bars i{height:4px; border-radius:2px; background:rgba(255,255,255,.22)}
 .tour-bars i.on{background:#E46E50}
 .tour-stage{position:relative; flex:1; min-height:0; margin:0 16px; border-radius:18px; touch-action:pan-y; user-select:none}
-.tour-stage .ph-label{left:50%; top:50%; bottom:auto; transform:translate(-50%,-50%); font-size:14px}
+.tour-stage.ph{background:#0B100E}
+.tour-stage img.photo{object-fit:contain}
+.tour-stage .ph-label{left:12px; bottom:12px; font-size:14px}
+.tour-nav{z-index:2; border:1.5px solid rgba(255,255,255,.45)}
 .tour-nav{position:absolute; top:50%; width:56px; height:56px; margin-top:-28px; background:rgba(11,16,14,.72)}
 .tour-nav.prev{left:12px} .tour-nav.next{right:12px}
 .tour-info{padding:14px 16px 6px; display:flex; flex-wrap:wrap; gap:6px 16px; align-items:baseline; max-width:1200px}
@@ -346,7 +351,28 @@ const ic = (n, cls='') => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hid
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const eur = (n) => n.toLocaleString('fr-FR') + ' €';
 const motif = '<svg class="motif" viewBox="0 0 120 90" aria-hidden="true"><rect x="22" y="8" width="76" height="62" rx="3"/><path d="M60 8v62M22 39h76M10 82h100"/></svg>';
-const ph = (label, tone=1, extra='', badges='') => `<div class="ph t${tone} ${extra}">${motif}${badges ? `<div class="badges">${badges}</div>` : ''}<span class="ph-label">${esc(label)}</span></div>`;
+const img = (src, eager=false) => src ? `<img class="photo" src="${src}" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" draggable="false">` : motif;
+const ph = (label, tone=1, extra='', badges='', src='') => `<div class="ph t${tone} ${extra}">${img(src)}${badges ? `<div class="badges">${badges}</div>` : ''}${label ? `<span class="ph-label">${esc(label)}</span>` : ''}</div>`;
+
+/* ---------- Photos d'illustration (Unsplash, voir photos/CREDITS.md) ---------- */
+/* Une liste par étape de la visite : entrée, pièce principale, cuisine, salle de bain, vue, immeuble */
+const PHOTOS = [
+  ['entree-1','entree-2','entree-3'],
+  ['piece-1','piece-2','piece-3','piece-4'],
+  ['cuisine-1','cuisine-2','cuisine-3','cuisine-4','cuisine-5'],
+  ['sdb-1','sdb-2','sdb-3','sdb-4'],
+  ['vue-1','vue-2','vue-3'],
+  ['immeuble-1','immeuble-2','immeuble-3','immeuble-4']
+];
+/* Première photo imposée pour certaines annonces : « annonce-étape » */
+const PHOTO_FIRST = {'2-1':'sejour-1', '3-4':'vue-sainte-anne'};
+const photoFor = (l, r, p=0) => {
+  const id = l.id >= 100 ? 1 : l.id;
+  const pool = PHOTOS[r] || PHOTOS[1];
+  const first = PHOTO_FIRST[id + '-' + r];
+  const name = first ? [first].concat(pool)[p % (pool.length + 1)] : pool[(id + p) % pool.length];
+  return 'photos/' + name + '.jpg';
+};
 
 /* ---------- Données (annonces fictives) ---------- */
 const CAMPUS = [
@@ -438,7 +464,7 @@ function card(l){
   const badges = `<span class="badge b-white">${ic('camera')}Visite virtuelle</span>${l.verified ? '<span class="badge b-sapin">Annonce vérifiée</span>' : ''}`;
   return `<div class="lcard${S.selected === l.id ? ' active' : ''}" data-card="${l.id}">
     <a href="#logement-${l.id}" style="display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit">
-      ${ph(l.rooms[1].name, l.tone, '', badges)}
+      ${ph(l.rooms[1].name, l.tone, '', badges, photoFor(l, 1))}
       <div class="stack" style="gap:2px">
         <div class="row" style="gap:6px;align-items:baseline"><span class="price">${eur(total(l))}</span><span class="muted">CC / mois</span></div>
         <strong>${esc(title(l))} · ${esc(l.where)}</strong>
@@ -474,7 +500,7 @@ function viewHome(){
           <a class="btn btn-lg" style="background:var(--corail-soft);color:var(--ink);border:1.5px solid var(--corail)" href="#publier">Je libère mon logement</a>
         </div>
       </div>
-      <div class="hero-photos" aria-hidden="true">${ph('Photo · Pièce principale',1)}${ph('Cuisine',2)}${ph('Vue / extérieur',3)}</div>
+      <div class="hero-photos" aria-hidden="true">${ph('Pièce principale',1,'','','photos/piece-1.jpg')}${ph('Cuisine',2,'','','photos/cuisine-1.jpg')}${ph('Vue sur cour',3,'','','photos/vue-1.jpg')}</div>
     </section>
     <form class="searchbar" id="homeSearch">
       <div class="field"><label for="h-campus">Campus ou quartier</label><select class="input" id="h-campus">${campusOptions(S.q.campus)}</select></div>
@@ -508,7 +534,7 @@ function viewHome(){
         <div><span style="color:var(--corail)">${ic('info')}</span><strong style="font-size:18px">Conseils anti-arnaque</strong><span class="muted">Ne versez jamais d’argent avant d’avoir visité ou signé un bail. Méfiez-vous d’un bailleur « à l’étranger » qui demande un virement pour réserver.</span></div>
       </div>
     </section>
-    <footer class="foot"><div class="stack"><span class="brand-name" style="color:var(--ink)">Passe-Clé</span><span>Une plateforme entre étudiants, à Rennes. Site de démonstration : annonces et coordonnées fictives.</span></div></footer>
+    <footer class="foot"><div class="stack"><span class="brand-name" style="color:var(--ink)">Passe-Clé</span><span>Une plateforme entre étudiants, à Rennes. Site de démonstration : annonces et coordonnées fictives.</span><span>Photos d’illustration issues d’<a href="https://unsplash.com" rel="noopener">Unsplash</a>, sous licence Unsplash (<a href="photos/CREDITS.md">crédits</a>).</span></div></footer>
   </div>`;
   document.getElementById('homeSearch').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -630,7 +656,7 @@ function viewSearch(){
     app.querySelectorAll('[data-pin]').forEach(p => p.setAttribute('aria-pressed', +p.dataset.pin === S.selected));
     app.querySelectorAll('[data-card]').forEach(c => c.classList.toggle('active', +c.dataset.card === S.selected));
     const l = LISTINGS.find(x => x.id === S.selected);
-    document.getElementById('mapPick').innerHTML = `<a class="list-item" href="#logement-${l.id}" style="margin-top:10px">${ph('',l.tone)}<span class="stack"><span class="price" style="font-size:21px">${eur(total(l))} <span class="muted" style="font-size:13px;font-family:var(--f-body);font-weight:500">CC</span></span><strong>${esc(title(l))}</strong><span class="trip" style="color:var(--sapin);font-weight:600;font-size:14px">${l.trips[S.q.campus][0]} min ${esc(l.trips[S.q.campus][1])}</span></span></a>`;
+    document.getElementById('mapPick').innerHTML = `<a class="list-item" href="#logement-${l.id}" style="margin-top:10px">${ph('',l.tone,'','',photoFor(l, 1))}<span class="stack"><span class="price" style="font-size:21px">${eur(total(l))} <span class="muted" style="font-size:13px;font-family:var(--f-body);font-weight:500">CC</span></span><strong>${esc(title(l))}</strong><span class="trip" style="color:var(--sapin);font-weight:600;font-size:14px">${l.trips[S.q.campus][0]} min ${esc(l.trips[S.q.campus][1])}</span></span></a>`;
     const cardEl = app.querySelector(`[data-card="${S.selected}"]`);
     if (cardEl && innerWidth > 900) cardEl.scrollIntoView({block:'nearest', behavior:'smooth'});
   }));
@@ -647,9 +673,10 @@ function viewListing(id){
   app.innerHTML = `<div class="view wrap">
     <a class="back" href="#recherche">${ic('left')}Retour aux résultats</a>
     <div class="gallery">
-      <button type="button" class="main ph t${l.tone}" data-tour="1" aria-label="Démarrer la visite virtuelle">${motif}<div class="badges"><span class="badge b-white">${ic('camera')}Visite virtuelle · ${l.rooms.length} pièces</span></div><span class="ph-label" style="left:auto;right:10px">Photo · ${esc(l.rooms[1].name)}</span><span class="btn btn-primary btn-lg start">${ic('camera')}Démarrer la visite</span></button>
-      ${tiles.map((r,i) => `<button type="button" class="ph t${(l.tone + i) % 3 + 1}" data-tour="${r}" aria-label="Voir ${esc(l.rooms[r].name)}">${motif}<span class="ph-label">${esc(l.rooms[r].name)}</span></button>`).join('')}
+      <button type="button" class="main ph t${l.tone}" data-tour="1" aria-label="Démarrer la visite virtuelle">${img(photoFor(l, 1), true)}<div class="badges"><span class="badge b-white">${ic('camera')}Visite virtuelle · ${l.rooms.length} pièces</span></div><span class="ph-label" style="left:auto;right:10px">Photo · ${esc(l.rooms[1].name)}</span><span class="btn btn-primary btn-lg start">${ic('camera')}Démarrer la visite</span></button>
+      ${tiles.map((r,i) => `<button type="button" class="ph t${(l.tone + i) % 3 + 1}" data-tour="${r}" aria-label="Voir ${esc(l.rooms[r].name)}">${img(photoFor(l, r))}<span class="ph-label">${esc(l.rooms[r].name)}</span></button>`).join('')}
     </div>
+    <p class="hint" style="margin-top:8px">Photos d’illustration : logement fictif, site de démonstration.</p>
     <div class="detail">
       <div class="detail-main">
         <section class="stack" style="gap:10px">
@@ -814,12 +841,12 @@ function renderTour(){
       <button type="button" id="tClose" aria-label="Fermer la visite">${ic('close')}</button>
     </div>
     <div class="tour-bars" style="grid-template-columns:repeat(${rooms.length}, minmax(0,1fr))">${rooms.map((x,i) => `<i class="${i <= t.r ? 'on' : ''}"></i>`).join('')}</div>
-    <div class="tour-stage ph t${tone}" id="stage">${motif}<span class="ph-label">Photo ${t.p + 1} · ${esc(room.name)}</span>
+    <div class="tour-stage ph t${tone}" id="stage">${img(photoFor(t.l, t.r, t.p), true)}<span class="ph-label">Photo ${t.p + 1} · ${esc(room.name)}</span>
       <button type="button" class="tour-nav prev" id="tPrev" aria-label="Photo précédente">${ic('left')}</button>
       <button type="button" class="tour-nav next" id="tNext" aria-label="Photo suivante">${ic('right')}</button>
     </div>
     <div class="tour-info"><h2>${esc(room.name)}</h2><span style="color:#B7C2BC;font-weight:600">${esc(room.area)}</span><p>${esc(room.desc)}</p></div>
-    <div class="tour-thumbs">${Array.from({length:room.n}, (x,i) => `<button type="button" class="ph t${(t.r + i) % 3 + 1}" data-ph="${i}" aria-label="Photo ${i + 1}" aria-current="${i === t.p}"></button>`).join('')}</div>
+    <div class="tour-thumbs">${Array.from({length:room.n}, (x,i) => `<button type="button" class="ph t${(t.r + i) % 3 + 1}" data-ph="${i}" aria-label="Photo ${i + 1}" aria-current="${i === t.p}">${img(photoFor(t.l, t.r, i), true)}</button>`).join('')}</div>
     <nav class="tour-rooms" aria-label="Pièces">${rooms.map((x,i) => `<button type="button" data-room="${i}" aria-current="${i === t.r ? 'step' : 'false'}">${esc(x.name.replace(' et parties communes',''))}</button>`).join('')}</nav>
     <div class="tour-foot"><button type="button" class="btn btn-primary" style="flex:1;max-width:420px" id="tContact">Contacter le bailleur</button></div>
   </div>`;
@@ -849,7 +876,7 @@ function viewPublish(){
     <fieldset style="border:0;margin:0;padding:0"><legend class="label" style="margin-bottom:4px">Équipements</legend><div class="row" style="gap:0 24px">${Object.keys(EQUIP).map((k,i) => `<label class="check"><input type="checkbox"${i < 5 ? ' checked' : ''}>${EQUIP[k]}</label>`).join('')}</div></fieldset>`;
   if (step === 2) body = `
     <p class="muted">Ajoutez 2 à 4 photos par pièce, puis glissez les pièces dans l’ordre de la visite (ou utilisez la flèche).</p>
-    <div class="note" style="background:var(--sapin-soft);align-items:center">${ph('Bon exemple',1,'','')}<ul style="margin:0;padding-left:18px"><li>Lumière du jour, rideaux ouverts</li><li>Cadrage large, depuis un angle</li><li>Pièce rangée, lit fait</li></ul></div>
+    <div class="note" style="background:var(--sapin-soft);align-items:center">${ph('Bon exemple',1,'','','photos/piece-1.jpg')}<ul style="margin:0;padding-left:18px"><li>Lumière du jour, rideaux ouverts</li><li>Cadrage large, depuis un angle</li><li>Pièce rangée, lit fait</li></ul></div>
     <ol id="roomList" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">${P.rooms.map((r,i) => `
       <li class="room-item" draggable="true" data-i="${i}">
         <div class="head"><span class="muted" style="cursor:grab">${ic('grip')}</span><strong style="flex:1">${i + 1}. ${esc(r[0])}</strong><span class="hint">${r[1].length} photo${r[1].length > 1 ? 's' : ''}</span>
@@ -910,7 +937,8 @@ function viewPublish(){
 }
 function cardPreview(){
   const P = S.pub;
-  return `<div class="lcard">${ph('Photo · ' + P.rooms[1][0], 1, '', `<span class="badge b-white">${ic('camera')}Visite virtuelle · ${P.rooms.length} pièces</span>`)}
+  const cover = (P.rooms[1] && P.rooms[1][1][0]) || 'photos/piece-1.jpg';
+  return `<div class="lcard">${ph('Photo · ' + P.rooms[1][0], 1, '', `<span class="badge b-white">${ic('camera')}Visite virtuelle · ${P.rooms.length} pièces</span>`, cover)}
     <div class="stack" style="gap:2px"><div class="row" style="gap:6px;align-items:baseline"><span class="price">430 €</span><span class="muted">CC / mois</span></div><strong>${esc(P.type)} · 22 m² · Villejean</strong><span class="trip">5 min à pied de Rennes 2 Villejean</span><span class="muted">Disponible le 1er juillet</span></div></div>`;
 }
 function bindRooms(){
@@ -948,13 +976,13 @@ function viewSpace(){
     <div class="seg" role="tablist" aria-label="Mon profil"><button type="button" role="tab" aria-selected="${seek}" data-tab="seek">Je cherche</button><button type="button" role="tab" aria-selected="${!seek}" data-tab="leave">Je pars</button></div>
     ${seek ? `
       <section class="stack" style="gap:10px"><h2 style="font-size:22px;font-weight:700">Logements enregistrés · ${saved.length}</h2>
-        ${saved.length ? saved.map(l => `<a class="list-item" href="#logement-${l.id}">${ph('',l.tone)}<span class="stack"><span class="price" style="font-size:20px">${eur(total(l))} CC</span><strong style="font-size:15px">${esc(title(l))}</strong><span class="hint">${esc(l.where)}</span></span></a>`).join('') : '<div class="empty"><span class="muted">Touchez le cœur d’une annonce pour la retrouver ici.</span><a class="btn btn-sapin" href="#recherche">Chercher un logement</a></div>'}</section>
+        ${saved.length ? saved.map(l => `<a class="list-item" href="#logement-${l.id}">${ph('',l.tone,'','',photoFor(l, 1))}<span class="stack"><span class="price" style="font-size:20px">${eur(total(l))} CC</span><strong style="font-size:15px">${esc(title(l))}</strong><span class="hint">${esc(l.where)}</span></span></a>`).join('') : '<div class="empty"><span class="muted">Touchez le cœur d’une annonce pour la retrouver ici.</span><a class="btn btn-sapin" href="#recherche">Chercher un logement</a></div>'}</section>
       <section class="stack" style="gap:10px"><h2 style="font-size:22px;font-weight:700">Mes alertes</h2>
         ${S.alerts.map((a,i) => `<div class="list-item" style="justify-content:space-between"><span class="stack"><strong style="font-size:15px">${esc(a.title)}</strong><span class="hint">${esc(a.sub)}</span></span><button type="button" class="switch" role="switch" aria-checked="${a.on}" data-alert="${i}" aria-label="Alerte ${esc(a.title)}"><span></span></button></div>`).join('')}
         <a class="btn btn-quiet" href="#recherche">Créer une alerte depuis une recherche</a></section>` : `
       <section class="stack" style="gap:10px"><h2 style="font-size:22px;font-weight:700">Mes annonces</h2>
         ${mine.length ? mine.map(l => `<div style="border:1px solid var(--line);border-radius:18px;overflow:hidden">
-          ${ph('Photo · ' + l.rooms[1].name, 1, '', `<span class="badge ${S.given[l.id] ? 'b-dark' : 'b-line'}" style="background:${S.given[l.id] ? '#17201C' : '#FFFFFF'};color:${S.given[l.id] ? '#FFFFFF' : '#17201C'}">${S.given[l.id] ? 'Logement attribué' : 'En attente de vérification'}</span>`).replace('class="ph t1 "','class="ph t1" style="height:150px"')}
+          ${ph('Photo · ' + l.rooms[1].name, 1, '', `<span class="badge ${S.given[l.id] ? 'b-dark' : 'b-line'}" style="background:${S.given[l.id] ? '#17201C' : '#FFFFFF'};color:${S.given[l.id] ? '#FFFFFF' : '#17201C'}">${S.given[l.id] ? 'Logement attribué' : 'En attente de vérification'}</span>`, photoFor(l, 1)).replace('class="ph t1 "','class="ph t1" style="height:150px"')}
           <div class="stack" style="gap:12px;padding:14px">
             <div class="stack"><strong class="d" style="font-size:21px">${esc(title(l))}</strong><span class="hint">${esc(l.where)} · ${eur(total(l))} CC · libre le ${esc(l.date)}</span></div>
             <div class="stats"><div><strong>0</strong><span class="hint">vues</span></div><div><strong>0</strong><span class="hint">messages</span></div><div><strong>0</strong><span class="hint">enregistrements</span></div></div>
@@ -984,7 +1012,7 @@ function viewMessages(){
   const msgs = S.convs[l.id];
   app.innerHTML = `<div class="view chat">
     <div class="convs" role="tablist" aria-label="Conversations">${Object.keys(S.convs).map(k => { const x = LISTINGS.find(y => y.id === +k); return `<button type="button" class="chip" role="tab" aria-pressed="${+k === l.id}" aria-selected="${+k === l.id}" data-conv="${k}">${esc(x.leaver.name)} · ${esc(x.where)}</button>`; }).join('')}</div>
-    <a class="list-item" href="#logement-${l.id}" style="background:var(--soft);border-color:transparent">${ph('',l.tone)}<span class="stack" style="flex:1"><strong>${esc(title(l))} · ${esc(l.where)}</strong><span class="hint">${eur(total(l))} CC · libre le ${esc(l.date)}</span></span>${ic('right')}</a>
+    <a class="list-item" href="#logement-${l.id}" style="background:var(--soft);border-color:transparent">${ph('',l.tone,'','',photoFor(l, 1))}<span class="stack" style="flex:1"><strong>${esc(title(l))} · ${esc(l.where)}</strong><span class="hint">${eur(total(l))} CC · libre le ${esc(l.date)}</span></span>${ic('right')}</a>
     <div class="row" style="gap:10px"><span class="avatar av-corail">${esc(l.leaver.name[0])}</span><div class="stack"><strong>${esc(l.leaver.name)}</strong><span class="hint">Étudiant·e sortant·e · ${esc(l.leaver.school)} · vérifié·e</span></div></div>
     <div class="bubbles" id="bubbles" aria-live="polite">${msgs.length ? msgs.map(m => `<div class="bubble${m.me ? ' me' : ''}">${esc(m.text)}</div>`).join('') : '<div class="empty"><strong>Démarrez la conversation</strong><span class="muted">Choisissez un message ci-dessous ou écrivez le vôtre.</span></div>'}</div>
     <div class="filters-row">${Object.keys(REPLIES).map(q => `<button type="button" class="chip" style="border-color:var(--sapin);color:var(--sapin)" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>

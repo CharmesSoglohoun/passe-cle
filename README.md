@@ -13,7 +13,8 @@ Mettre en relation, à Rennes, les étudiants qui quittent leur logement et ceux
 | Fichier | Rôle |
 |---------|------|
 | `prompt-claude-design.md` | Prompt à coller dans Claude Design pour obtenir les maquettes et le prototype |
-| `index.html` | Prototype interactif généré par Claude Design (version du 2026-10-19), nettoyé pour être mis en ligne : en-tête HTML propre, langue française, `noindex` (démo non référencée) |
+| `index.html` | Prototype interactif généré par Claude Design (version du 2026-10-19), nettoyé pour être mis en ligne : en-tête HTML propre, langue française, `noindex` (démo non référencée). Photos ajoutées le 2026-10-21 (accueil, cartes, fiches, visite virtuelle) |
+| `photos/` | 26 photos d'illustration Unsplash (licence Unsplash), classées par pièce : entrée, pièce principale, séjour, cuisine, salle de bain, vue, immeuble. Crédits dans `photos/CREDITS.md` |
 
 ## Liens
 
