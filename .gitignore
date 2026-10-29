@@ -22,3 +22,6 @@ build/
 # Logs et temporaires
 *.log
 *.tmp
+
+# Le vrai site (Next.js) a son propre dépôt Git
+site/
