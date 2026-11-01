@@ -25,3 +25,6 @@ build/
 
 # Le vrai site (Next.js) a son propre dépôt Git
 site/
+
+# Documents internes (stratégie), gardés hors de GitHub
+strategie/
